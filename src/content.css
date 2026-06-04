@@ -1,0 +1,185 @@
+.envmate-badge {
+  position: fixed;
+  z-index: 2147483647;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  max-width: min(360px, calc(100vw - 24px));
+  padding: 7px 10px;
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.22);
+  color: var(--envmate-text-color, #fff);
+  background: var(--envmate-color, #2563eb);
+  font: 600 var(--envmate-badge-size, 14px)/1.2 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  letter-spacing: 0;
+  opacity: var(--envmate-badge-opacity, 1);
+  pointer-events: auto;
+  transition: opacity 140ms ease;
+  user-select: none;
+}
+
+.envmate-badge.envmate-badge--peek {
+  opacity: calc(var(--envmate-badge-opacity, 1) * 0.28);
+}
+
+.envmate-badge[data-position="top-right"] {
+  top: var(--envmate-badge-offset, 12px);
+  right: var(--envmate-badge-offset, 12px);
+}
+
+.envmate-badge[data-position="top-left"] {
+  top: var(--envmate-badge-offset, 12px);
+  left: var(--envmate-badge-offset, 12px);
+}
+
+.envmate-badge[data-position="bottom-right"] {
+  right: var(--envmate-badge-offset, 12px);
+  bottom: var(--envmate-badge-offset, 12px);
+}
+
+.envmate-badge[data-position="bottom-left"] {
+  left: var(--envmate-badge-offset, 12px);
+  bottom: var(--envmate-badge-offset, 12px);
+}
+
+.envmate-badge[data-style="slanted"] {
+  width: 236px;
+  max-width: none;
+  justify-content: center;
+  padding: 14px 20px;
+  border-radius: 0;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.24);
+  font: 800 calc(var(--envmate-badge-size, 14px) + 1px)/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  text-transform: uppercase;
+  transform-origin: center;
+}
+
+.envmate-badge[data-style="slanted"][data-position="top-right"] {
+  top: calc(var(--envmate-badge-offset, 12px) + 12px);
+  right: calc(var(--envmate-badge-offset, 12px) - 82px);
+  transform: rotate(45deg);
+}
+
+.envmate-badge[data-style="slanted"][data-position="top-left"] {
+  top: calc(var(--envmate-badge-offset, 12px) + 12px);
+  left: calc(var(--envmate-badge-offset, 12px) - 82px);
+  transform: rotate(-45deg);
+}
+
+.envmate-badge[data-style="slanted"][data-position="bottom-right"] {
+  right: calc(var(--envmate-badge-offset, 12px) - 82px);
+  bottom: calc(var(--envmate-badge-offset, 12px) + 12px);
+  transform: rotate(-45deg);
+}
+
+.envmate-badge[data-style="slanted"][data-position="bottom-left"] {
+  left: calc(var(--envmate-badge-offset, 12px) - 82px);
+  bottom: calc(var(--envmate-badge-offset, 12px) + 12px);
+  transform: rotate(45deg);
+}
+
+.envmate-badge__name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.envmate-watermark {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483646;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.envmate-watermark__grid {
+  position: absolute;
+  inset: -20%;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(180px, 1fr));
+  gap: var(--envmate-watermark-gap, 80px) calc(var(--envmate-watermark-gap, 80px) * 0.55);
+  transform: rotate(var(--envmate-watermark-angle, -24deg));
+}
+
+.envmate-watermark__item {
+  color: var(--envmate-watermark-color, #2563eb);
+  font: 800 var(--envmate-watermark-size, 42px)/1 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  letter-spacing: 0;
+  opacity: var(--envmate-watermark-opacity, 0.08);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.envmate-login-panel {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  z-index: 2147483647;
+  width: min(280px, calc(100vw - 24px));
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 8px;
+  background: #fff;
+  box-shadow: 0 16px 48px rgba(15, 23, 42, 0.22);
+  color: #111827;
+  font: 13px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  overflow: hidden;
+}
+
+.envmate-login-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  color: var(--envmate-text-color, #fff);
+  background: var(--envmate-color, #2563eb);
+  font-weight: 700;
+}
+
+.envmate-login-panel__close {
+  border: 0;
+  border-radius: 5px;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.18);
+  cursor: pointer;
+  font: inherit;
+  padding: 2px 7px;
+}
+
+.envmate-login-panel__body {
+  display: grid;
+  gap: 8px;
+  padding: 10px;
+}
+
+.envmate-login-panel__button {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  background: #f9fafb;
+  color: #111827;
+  cursor: pointer;
+  font: 600 13px/1.2 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  padding: 8px 10px;
+  text-align: left;
+}
+
+.envmate-login-panel__button:hover {
+  background: #eef2ff;
+  border-color: #c7d2fe;
+}
+
+.envmate-toast {
+  position: fixed;
+  right: 12px;
+  bottom: 12px;
+  z-index: 2147483647;
+  max-width: min(320px, calc(100vw - 24px));
+  border-radius: 7px;
+  background: #111827;
+  color: #fff;
+  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.24);
+  font: 600 13px/1.35 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  padding: 9px 11px;
+}
