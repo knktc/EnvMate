@@ -35,10 +35,6 @@
         </aside>
 
         <section class="workspace">
-          <div class="status-bar">
-            <div id="status" class="status" data-i18n="ready">Ready</div>
-          </div>
-
           <div class="workspace-shell">
             <form id="environment-form" class="form">
               <section id="section-basic" class="form-section">
@@ -66,65 +62,102 @@
               </section>
 
               <section id="section-badge" class="form-section">
-              <div class="section-title">
-                <h2 data-i18n="badgeConfig">Badge Config</h2>
-                <button id="preview-marker" class="small-button" type="button" data-i18n="previewMarker">Preview</button>
+              <div class="section-title section-title--with-toggle">
+                <div>
+                  <h2 data-i18n="badgeConfig">Badge Config</h2>
+                  <p class="section-title__hint" data-i18n="badgeConfigHint">Control the marker shown on matched pages.</p>
+                </div>
+                <label class="toggle-control section-title__toggle">
+                  <input id="env-badge-enabled" type="checkbox" />
+                  <span class="toggle-control__switch" aria-hidden="true"></span>
+                  <span data-i18n="badgeEnabled">Enable badge</span>
+                </label>
               </div>
-              <label class="check-field">
-                <input id="env-badge-enabled" type="checkbox" />
-                <span data-i18n="badgeEnabled">Enable badge</span>
-              </label>
-              <label class="check-field">
-                <input id="env-title-prefix" type="checkbox" />
-                <span data-i18n="titlePrefix">Prefix page title with badge</span>
-              </label>
-              <div class="field-grid">
-                <label class="field">
-                  <span data-i18n="badgeText">Badge Text</span>
-                  <input id="env-badge" type="text" />
-                </label>
-                <label class="field">
-                  <span data-i18n="badgeColor">Badge Color</span>
-                  <div class="color-field">
-                    <div id="badge-color-swatches" class="color-swatches"></div>
-                    <input id="badge-color" type="color" />
+              <div class="badge-layout">
+                <div class="badge-card badge-card--content">
+                  <div class="badge-card__head">
+                    <h3 data-i18n="badgeContent">Content</h3>
+                    <label class="check-field check-field--inline">
+                      <input id="env-title-prefix" type="checkbox" />
+                      <span data-i18n="titlePrefix">Prefix page title with badge</span>
+                    </label>
                   </div>
-                </label>
-                <label class="field">
-                  <span data-i18n="badgeTextColor">Badge Text Color</span>
-                  <div class="color-field">
-                    <div id="badge-text-color-swatches" class="color-swatches"></div>
-                    <input id="badge-text-color" type="color" />
+                  <div class="badge-content-grid">
+                    <label class="field badge-text-field">
+                      <span data-i18n="badgeText">Badge Text</span>
+                      <input id="env-badge" type="text" data-i18n-placeholder="envBadgePlaceholder" />
+                    </label>
+                    <div class="badge-color-pair">
+                      <label class="field color-field">
+                        <span data-i18n="badgeColor">Badge Color</span>
+                        <div class="color-field__body">
+                          <div id="badge-color-swatches" class="color-swatches"></div>
+                          <input id="badge-color" type="color" />
+                        </div>
+                      </label>
+                      <label class="field color-field">
+                        <span data-i18n="badgeTextColor">Badge Text Color</span>
+                        <div class="color-field__body">
+                          <div id="badge-text-color-swatches" class="color-swatches"></div>
+                          <input id="badge-text-color" type="color" />
+                        </div>
+                      </label>
+                    </div>
                   </div>
-                </label>
-                <label class="field">
-                  <span data-i18n="badgeStyle">Badge Style</span>
-                  <select id="badge-style">
-                    <option value="pill" data-i18n="badgeStylePill">Pill</option>
-                    <option value="slanted" data-i18n="badgeStyleSlanted">Slanted</option>
-                  </select>
-                </label>
-                <label class="field">
-                  <span data-i18n="badgePosition">Badge Position</span>
-                  <select id="badge-position">
-                    <option value="top-right" data-i18n="topRight">Top Right</option>
-                    <option value="top-left" data-i18n="topLeft">Top Left</option>
-                    <option value="bottom-right" data-i18n="bottomRight">Bottom Right</option>
-                    <option value="bottom-left" data-i18n="bottomLeft">Bottom Left</option>
-                  </select>
-                </label>
-                <label class="field">
-                  <span data-i18n="badgeSize">Badge Size</span>
-                  <input id="badge-size" type="range" min="12" max="24" step="1" />
-                </label>
-                <label class="field">
-                  <span data-i18n="badgeOffset">Badge Offset</span>
-                  <input id="badge-offset" type="range" min="0" max="48" step="1" />
-                </label>
-                <label class="field">
-                  <span data-i18n="badgeOpacity">Badge Opacity</span>
-                  <input id="badge-opacity" type="range" min="0.35" max="1" step="0.05" />
-                </label>
+                </div>
+
+                <div class="badge-card">
+                  <div class="badge-card__head">
+                    <h3 data-i18n="badgeStyle">Badge Style</h3>
+                  </div>
+                  <div class="badge-style-options" id="badge-style" role="radiogroup" data-i18n-title="badgeStyle">
+                    <label class="radio-card">
+                      <input type="radio" name="badge-style" value="slanted" />
+                      <span class="radio-card__indicator" aria-hidden="true"></span>
+                      <span class="radio-card__body">
+                        <span class="radio-card__title" data-i18n="badgeStyleSlanted">Corner Ribbon</span>
+                        <span class="radio-card__preview radio-card__preview--slanted" data-preview-label="EnvMate">EnvMate</span>
+                      </span>
+                    </label>
+                    <label class="radio-card">
+                      <input type="radio" name="badge-style" value="pill" />
+                      <span class="radio-card__indicator" aria-hidden="true"></span>
+                      <span class="radio-card__body">
+                        <span class="radio-card__title" data-i18n="badgeStylePill">Pill</span>
+                        <span class="radio-card__preview radio-card__preview--pill" data-preview-label="EnvMate">EnvMate</span>
+                      </span>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="badge-card">
+                  <div class="badge-card__head">
+                    <h3 data-i18n="badgePlacement">Position & Display</h3>
+                  </div>
+                  <div class="field-grid badge-controls-grid">
+                    <label class="field">
+                      <span data-i18n="badgePosition">Badge Position</span>
+                      <select id="badge-position">
+                        <option value="top-right" data-i18n="topRight">Top Right</option>
+                        <option value="top-left" data-i18n="topLeft">Top Left</option>
+                        <option value="bottom-right" data-i18n="bottomRight">Bottom Right</option>
+                        <option value="bottom-left" data-i18n="bottomLeft">Bottom Left</option>
+                      </select>
+                    </label>
+                    <label class="field">
+                      <span data-i18n="badgeScale">Badge Size</span>
+                      <input id="badge-scale" type="range" min="0.75" max="1.35" step="0.05" />
+                    </label>
+                    <label class="field">
+                      <span data-i18n="badgeSize">Badge Text Size</span>
+                      <input id="badge-size" type="range" min="12" max="24" step="1" />
+                    </label>
+                    <label class="field">
+                      <span data-i18n="badgeOpacity">Badge Opacity</span>
+                      <input id="badge-opacity" type="range" min="0.35" max="1" step="0.05" />
+                    </label>
+                  </div>
+                </div>
               </div>
               <div class="marker-preview">
                 <div class="marker-preview__head">
@@ -135,41 +168,60 @@
               </section>
 
               <section id="section-watermark" class="form-section">
-              <div class="section-title">
-                <h2 data-i18n="watermarkConfig">Watermark Config</h2>
+              <div class="section-title section-title--with-toggle">
+                <div>
+                  <h2 data-i18n="watermarkConfig">Watermark Config</h2>
+                  <p class="section-title__hint" data-i18n="watermarkConfigHint">Control the repeated watermark shown on matched pages.</p>
+                </div>
+                <label class="toggle-control section-title__toggle">
+                  <input id="env-watermark-enabled" type="checkbox" />
+                  <span class="toggle-control__switch" aria-hidden="true"></span>
+                  <span data-i18n="watermarkEnabled">Enable watermark</span>
+                </label>
               </div>
-              <label class="check-field">
-                <input id="env-watermark-enabled" type="checkbox" />
-                <span data-i18n="watermarkEnabled">Enable watermark</span>
-              </label>
-              <div class="field-grid">
-                <label class="field">
-                  <span data-i18n="watermarkText">Watermark Text</span>
-                  <input id="env-watermark-text" type="text" />
-                </label>
-                <label class="field">
-                  <span data-i18n="watermarkColor">Watermark Color</span>
-                  <div class="color-field">
-                    <div id="watermark-color-swatches" class="color-swatches"></div>
-                    <input id="watermark-color" type="color" />
+              <div class="watermark-layout">
+                <div class="badge-card">
+                  <div class="badge-card__head">
+                    <h3 data-i18n="watermarkContent">Content & Color</h3>
                   </div>
-                </label>
-                <label class="field">
-                  <span data-i18n="watermarkOpacity">Watermark Opacity</span>
-                  <input id="watermark-opacity" type="range" min="0.02" max="0.2" step="0.01" />
-                </label>
-                <label class="field">
-                  <span data-i18n="watermarkAngle">Watermark Angle</span>
-                  <input id="watermark-angle" type="range" min="-45" max="0" step="1" />
-                </label>
-                <label class="field">
-                  <span data-i18n="watermarkSize">Watermark Size</span>
-                  <input id="watermark-size" type="range" min="20" max="72" step="1" />
-                </label>
-                <label class="field">
-                  <span data-i18n="watermarkGap">Watermark Gap</span>
-                  <input id="watermark-gap" type="range" min="32" max="140" step="4" />
-                </label>
+                  <div class="watermark-content-grid">
+                    <label class="field">
+                      <span data-i18n="watermarkText">Watermark Text</span>
+                      <input id="env-watermark-text" type="text" />
+                    </label>
+                    <label class="field color-field">
+                      <span data-i18n="watermarkColor">Watermark Color</span>
+                      <div class="color-field__body">
+                        <div id="watermark-color-swatches" class="color-swatches"></div>
+                        <input id="watermark-color" type="color" />
+                      </div>
+                    </label>
+                  </div>
+                </div>
+
+                <div class="badge-card">
+                  <div class="badge-card__head">
+                    <h3 data-i18n="watermarkAppearance">Display</h3>
+                  </div>
+                  <div class="field-grid watermark-controls-grid">
+                    <label class="field">
+                      <span data-i18n="watermarkOpacity">Watermark Opacity</span>
+                      <input id="watermark-opacity" type="range" min="0.02" max="0.2" step="0.01" />
+                    </label>
+                    <label class="field">
+                      <span data-i18n="watermarkAngle">Watermark Angle</span>
+                      <input id="watermark-angle" type="range" min="-45" max="0" step="1" />
+                    </label>
+                    <label class="field">
+                      <span data-i18n="watermarkSize">Watermark Size</span>
+                      <input id="watermark-size" type="range" min="20" max="72" step="1" />
+                    </label>
+                    <label class="field">
+                      <span data-i18n="watermarkGap">Watermark Gap</span>
+                      <input id="watermark-gap" type="range" min="32" max="140" step="4" />
+                    </label>
+                  </div>
+                </div>
               </div>
               <div class="marker-preview">
                 <div class="marker-preview__head">
@@ -184,6 +236,7 @@
                 <h2 data-i18n="testAccounts">Test Accounts</h2>
                 <button id="add-account" class="small-button" type="button" data-i18n="addAccount">Add Account</button>
               </div>
+              <div id="accounts-validation" class="validation-error" hidden></div>
               <div id="accounts-list" class="stack-list"></div>
               </section>
             </form>

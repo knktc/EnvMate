@@ -19,10 +19,11 @@ const SAMPLE_SETTINGS = {
       badgeEnabled: true,
       badgeColor: "#2563eb",
       badgeTextColor: "#ffffff",
-      badgeStyle: "pill",
+      badgeStyle: "slanted",
       badgePosition: "top-right",
       badgeOffset: 12,
       badgeOpacity: 1,
+      badgeScale: 1,
       badgeSize: 14,
       watermarkText: "Development",
       watermarkColor: "#2563eb",
@@ -51,10 +52,11 @@ const SAMPLE_SETTINGS = {
       badgeEnabled: true,
       badgeColor: "#059669",
       badgeTextColor: "#ffffff",
-      badgeStyle: "pill",
+      badgeStyle: "slanted",
       badgePosition: "top-right",
       badgeOffset: 12,
       badgeOpacity: 1,
+      badgeScale: 1,
       badgeSize: 14,
       watermarkText: "Test",
       watermarkColor: "#059669",
@@ -77,10 +79,11 @@ const SAMPLE_SETTINGS = {
       badgeEnabled: true,
       badgeColor: "#dc2626",
       badgeTextColor: "#ffffff",
-      badgeStyle: "pill",
+      badgeStyle: "slanted",
       badgePosition: "top-right",
       badgeOffset: 12,
       badgeOpacity: 1,
+      badgeScale: 1,
       badgeSize: 14,
       watermarkText: "Pre Release",
       watermarkColor: "#dc2626",
@@ -118,14 +121,15 @@ const nodes = {
   titlePrefix: document.querySelector("#env-title-prefix"),
   rules: document.querySelector("#rules-list"),
   accounts: document.querySelector("#accounts-list"),
+  accountsValidation: document.querySelector("#accounts-validation"),
   badgeColor: document.querySelector("#badge-color"),
   badgeColorSwatches: document.querySelector("#badge-color-swatches"),
   badgeTextColor: document.querySelector("#badge-text-color"),
   badgeTextColorSwatches: document.querySelector("#badge-text-color-swatches"),
   badgePosition: document.querySelector("#badge-position"),
-  badgeStyle: document.querySelector("#badge-style"),
+  badgeStyleOptions: Array.from(document.querySelectorAll("input[name='badge-style']")),
+  badgeScale: document.querySelector("#badge-scale"),
   badgeSize: document.querySelector("#badge-size"),
-  badgeOffset: document.querySelector("#badge-offset"),
   badgeOpacity: document.querySelector("#badge-opacity"),
   watermarkText: document.querySelector("#env-watermark-text"),
   watermarkColor: document.querySelector("#watermark-color"),
@@ -135,7 +139,6 @@ const nodes = {
   watermarkAngle: document.querySelector("#watermark-angle"),
   watermarkSize: document.querySelector("#watermark-size"),
   watermarkGap: document.querySelector("#watermark-gap"),
-  previewMarker: document.querySelector("#preview-marker"),
   badgePreviewSurface: document.querySelector("#badge-preview-surface"),
   watermarkPreviewSurface: document.querySelector("#watermark-preview-surface"),
   sectionNavButtons: Array.from(document.querySelectorAll("[data-scroll-target]")),
@@ -146,6 +149,7 @@ const nodes = {
 const t = window.envmateI18n.t;
 
 let settings = structuredClone(SAMPLE_SETTINGS);
+let savedSettingsSnapshot = clone(SAMPLE_SETTINGS);
 let selectedId = null;
 let selectedGroupId = DEFAULT_GROUP_ID;
 let isRendering = false;
@@ -167,6 +171,7 @@ function clone(value) {
 }
 
 function setStatus(message, isError = false) {
+  if (!nodes.status) return;
   nodes.status.textContent = message;
   nodes.status.style.color = isError ? "#dc2626" : "#64748b";
 }
@@ -177,9 +182,79 @@ function syncSaveButtonState() {
   nodes.save.textContent = hasUnsavedChanges ? t("savePending") : t("save");
 }
 
+function restoreSavedSettingsSnapshot() {
+  settings = clone(savedSettingsSnapshot);
+  hasUnsavedChanges = false;
+  syncSaveButtonState();
+}
+
+function confirmDiscardUnsavedChanges() {
+  if (!hasUnsavedChanges) return true;
+  if (!window.confirm(t("confirmUnsavedSwitch"))) return false;
+  restoreSavedSettingsSnapshot();
+  return true;
+}
+
+function selectEnvironment(groupId, environmentId) {
+  if (groupId === selectedGroupId && environmentId === selectedId) return true;
+  if (!confirmDiscardUnsavedChanges()) return false;
+  selectedGroupId = groupId;
+  selectedId = environmentId;
+  clearAccountsValidationError();
+  render();
+  return true;
+}
+
 function syncEnabledLabel() {
   if (!nodes.enabled || !nodes.enabledLabel) return;
   nodes.enabledLabel.textContent = nodes.enabled.checked ? t("environmentEnabledOn") : t("environmentEnabledOff");
+}
+
+function selectedBadgeStyle() {
+  return nodes.badgeStyleOptions.find((option) => option.checked)?.value || "slanted";
+}
+
+function syncBadgeStyleOptions(value) {
+  nodes.badgeStyleOptions.forEach((option) => {
+    option.checked = option.value === value;
+  });
+}
+
+function clearAccountsValidationError() {
+  if (!nodes.accountsValidation) return;
+  nodes.accountsValidation.hidden = true;
+  nodes.accountsValidation.textContent = "";
+}
+
+function accountHasInput(account) {
+  return Boolean(
+    String(account?.label || "").trim() ||
+      String(account?.username || "").trim() ||
+      String(account?.password || "").trim()
+  );
+}
+
+function findEmptyAccount() {
+  for (const environment of settings.environments) {
+    const accountIndex = (environment.accounts || []).findIndex((account) => !accountHasInput(account));
+    if (accountIndex !== -1) {
+      return { environment, accountIndex };
+    }
+  }
+  return null;
+}
+
+function showAccountsValidationError(message) {
+  if (nodes.accountsValidation) {
+    nodes.accountsValidation.hidden = false;
+    nodes.accountsValidation.textContent = message;
+  }
+  const accountsSection = document.getElementById("section-accounts");
+  if (accountsSection) {
+    activeSectionId = "section-accounts";
+    syncRailNav();
+    scrollSectionIntoView(accountsSection);
+  }
 }
 
 function bindNodeEvent(node, eventName, handler) {
@@ -386,8 +461,9 @@ function normalizeSettings(value) {
       badgeEnabled,
       badgeColor: environment.badgeColor || environment.color || "#2563eb",
       badgeTextColor: environment.badgeTextColor || environment.textColor || "#ffffff",
-      badgeStyle: environment.badgeStyle || value.appearance?.badgeStyle || "pill",
+      badgeStyle: environment.badgeStyle || value.appearance?.badgeStyle || "slanted",
       badgePosition: environment.badgePosition || value.appearance?.badgePosition || "top-right",
+      badgeScale: Number(environment.badgeScale ?? 1),
       badgeSize: Number(environment.badgeSize ?? 14),
       badgeOffset: Number(environment.badgeOffset ?? value.appearance?.badgeOffset ?? 12),
       badgeOpacity: Number(environment.badgeOpacity ?? value.appearance?.badgeOpacity ?? 1),
@@ -521,11 +597,10 @@ function renderEnvironmentList() {
     const header = document.createElement("div");
     header.className = "environment-group__title";
     header.addEventListener("click", () => {
-      selectedGroupId = group.id;
-      if (!settings.environments.some((environment) => environment.id === selectedId && environment.groupId === group.id)) {
-        selectedId = settings.environments.find((environment) => environment.groupId === group.id)?.id || null;
-      }
-      render();
+      const nextSelectedId = settings.environments.some((environment) => environment.id === selectedId && environment.groupId === group.id)
+        ? selectedId
+        : settings.environments.find((environment) => environment.groupId === group.id)?.id || null;
+      selectEnvironment(group.id, nextSelectedId);
     });
 
     const titleWrap = document.createElement("div");
@@ -618,11 +693,7 @@ function renderEnvironmentList() {
         meta.textContent = environment.rules?.[0]?.value || t("noUrlRules");
 
         button.append(name, meta);
-        button.addEventListener("click", () => {
-          selectedGroupId = group.id;
-          selectedId = environment.id;
-          render();
-        });
+        button.addEventListener("click", () => selectEnvironment(group.id, environment.id));
         stack.append(button);
       });
     }
@@ -716,6 +787,7 @@ function createAccountRow(account, index) {
 
   const update = () => {
     const environment = selectedEnvironment();
+    clearAccountsValidationError();
     environment.accounts[index] = {
       ...environment.accounts[index],
       label: label.value,
@@ -744,6 +816,7 @@ function createAccountRow(account, index) {
 
   remove.addEventListener("click", () => {
     const environment = selectedEnvironment();
+    clearAccountsValidationError();
     environment.accounts.splice(index, 1);
     render();
     markChanged();
@@ -807,11 +880,12 @@ function renderPreviewBadge(surface, label, environment) {
   const badge = document.createElement("div");
   badge.className = "marker-preview__badge";
   badge.dataset.position = environment.badgePosition || "top-right";
-  badge.dataset.style = environment.badgeStyle || "pill";
+  badge.dataset.style = environment.badgeStyle || "slanted";
   badge.style.setProperty("--preview-badge-color", environment.badgeColor || "#2563eb");
   badge.style.setProperty("--preview-badge-text", environment.badgeTextColor || "#ffffff");
-  badge.style.setProperty("--preview-badge-offset", `${environment.badgeOffset ?? 12}px`);
+  badge.style.setProperty("--preview-badge-offset", "12px");
   badge.style.setProperty("--preview-badge-opacity", String(environment.badgeOpacity ?? 1));
+  badge.style.setProperty("--preview-badge-scale", String(environment.badgeScale ?? 1));
   badge.style.setProperty("--preview-badge-size", `${environment.badgeSize ?? 14}px`);
   badge.textContent = label;
   surface.append(badge);
@@ -917,10 +991,10 @@ function renderForm() {
   nodes.enabled.checked = environment.enabled !== false;
   syncEnabledLabel();
   nodes.titlePrefix.checked = environment.titlePrefix;
-  nodes.badgeStyle.value = environment.badgeStyle;
+  syncBadgeStyleOptions(environment.badgeStyle);
   nodes.badgePosition.value = environment.badgePosition;
+  nodes.badgeScale.value = environment.badgeScale;
   nodes.badgeSize.value = environment.badgeSize;
-  nodes.badgeOffset.value = environment.badgeOffset;
   nodes.badgeOpacity.value = environment.badgeOpacity;
   nodes.watermarkOpacity.value = environment.watermarkOpacity;
   nodes.watermarkAngle.value = environment.watermarkAngle;
@@ -960,6 +1034,9 @@ async function setSelectedEnvironmentEnabled(enabled) {
   environment.enabled = enabled;
   renderEnvironmentList();
   await chrome.storage.local.set({ [STORAGE_KEY]: settings });
+  savedSettingsSnapshot = clone(settings);
+  hasUnsavedChanges = false;
+  syncSaveButtonState();
   syncEnabledLabel();
   setStatus(t("saved"));
 }
@@ -1011,6 +1088,7 @@ function deleteGroup(groupId) {
 }
 
 function addEnvironment(groupId = selectedGroupId || DEFAULT_GROUP_ID) {
+  if (!confirmDiscardUnsavedChanges()) return;
   const targetGroupId = groupId || DEFAULT_GROUP_ID;
   const color = pickEnvironmentColor();
   const name = t("newEnvironment");
@@ -1023,8 +1101,9 @@ function addEnvironment(groupId = selectedGroupId || DEFAULT_GROUP_ID) {
     badgeEnabled: true,
     badgeColor: color,
     badgeTextColor: "#ffffff",
-    badgeStyle: "pill",
+    badgeStyle: "slanted",
     badgePosition: "top-right",
+    badgeScale: 1,
     badgeSize: 14,
     badgeOffset: 12,
     badgeOpacity: 1,
@@ -1048,6 +1127,7 @@ function addEnvironment(groupId = selectedGroupId || DEFAULT_GROUP_ID) {
 }
 
 function duplicateEnvironment(groupId) {
+  if (!confirmDiscardUnsavedChanges()) return;
   const source =
     (selectedEnvironment() && selectedEnvironment().groupId === groupId ? selectedEnvironment() : null) ||
     settings.environments.find((environment) => environment.groupId === groupId);
@@ -1077,10 +1157,20 @@ function deleteEnvironment() {
 }
 
 async function saveSettings() {
+  const emptyAccount = findEmptyAccount();
+  if (emptyAccount) {
+    selectedGroupId = emptyAccount.environment.groupId;
+    selectedId = emptyAccount.environment.id;
+    render();
+    showAccountsValidationError(t("emptyAccountError"));
+    return;
+  }
   settings = normalizeSettings(settings);
   await chrome.storage.local.set({ [STORAGE_KEY]: settings });
+  savedSettingsSnapshot = clone(settings);
   hasUnsavedChanges = false;
   syncSaveButtonState();
+  clearAccountsValidationError();
   render();
   setStatus(t("saved"));
 }
@@ -1097,8 +1187,12 @@ function exportSettings() {
 }
 
 function applySettings(nextSettings, message) {
+  clearAccountsValidationError();
   settings = normalizeSettings(nextSettings);
   hasUnsavedChanges = message === t("importedSaveToApply") || message === t("sampleLoadedSaveToApply");
+  if (!hasUnsavedChanges) {
+    savedSettingsSnapshot = clone(settings);
+  }
   selectedGroupId = settings.groups[0]?.id || DEFAULT_GROUP_ID;
   selectedId = settings.environments.find((environment) => environment.groupId === selectedGroupId)?.id || settings.environments[0]?.id || null;
   render();
@@ -1155,16 +1249,19 @@ bindNodeEvent(nodes.badgePosition, "change", () => {
   updateSelectedEnvironment({ badgePosition: nodes.badgePosition.value });
 });
 
-bindNodeEvent(nodes.badgeStyle, "change", () => {
-  updateSelectedEnvironment({ badgeStyle: nodes.badgeStyle.value });
+nodes.badgeStyleOptions.forEach((option) => {
+  bindNodeEvent(option, "change", () => {
+    const nextStyle = selectedBadgeStyle();
+    updateSelectedEnvironment({ badgeStyle: nextStyle });
+  });
 });
 
 bindNodeEvent(nodes.badgeSize, "input", () => {
   updateSelectedEnvironment({ badgeSize: Number(nodes.badgeSize.value) });
 });
 
-bindNodeEvent(nodes.badgeOffset, "input", () => {
-  updateSelectedEnvironment({ badgeOffset: Number(nodes.badgeOffset.value) });
+bindNodeEvent(nodes.badgeScale, "input", () => {
+  updateSelectedEnvironment({ badgeScale: Number(nodes.badgeScale.value) });
 });
 
 bindNodeEvent(nodes.badgeOpacity, "input", () => {
@@ -1185,11 +1282,6 @@ bindNodeEvent(nodes.watermarkSize, "input", () => {
 
 bindNodeEvent(nodes.watermarkGap, "input", () => {
   updateSelectedEnvironment({ watermarkGap: Number(nodes.watermarkGap.value) });
-});
-
-bindNodeEvent(nodes.previewMarker, "click", () => {
-  renderMarkerPreviews();
-  nodes.badgePreviewSurface.scrollIntoView({ block: "nearest", behavior: "smooth" });
 });
 
 nodes.sectionNavButtons.forEach((button) => {
@@ -1222,6 +1314,12 @@ window.addEventListener(
 
 window.addEventListener("resize", positionToolbox, { passive: true });
 
+window.addEventListener("beforeunload", (event) => {
+  if (!hasUnsavedChanges) return;
+  event.preventDefault();
+  event.returnValue = "";
+});
+
 bindNodeEvent(nodes.addRule, "click", () => {
   const environment = selectedEnvironment();
   if (!environment) return;
@@ -1233,6 +1331,7 @@ bindNodeEvent(nodes.addRule, "click", () => {
 bindNodeEvent(nodes.addAccount, "click", () => {
   const environment = selectedEnvironment();
   if (!environment) return;
+  clearAccountsValidationError();
   environment.accounts.push({ id: uid("account"), label: "", username: "", password: "", defaultFill: false });
   render();
   markChanged();
