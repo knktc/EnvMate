@@ -157,6 +157,7 @@ let activeSectionId = "section-basic";
 let hasUnsavedChanges = false;
 let scrollTargetLockId = "";
 let scrollSettleTimer = 0;
+let draggingAccountId = "";
 
 function uid(prefix) {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
@@ -224,6 +225,35 @@ function clearAccountsValidationError() {
   if (!nodes.accountsValidation) return;
   nodes.accountsValidation.hidden = true;
   nodes.accountsValidation.textContent = "";
+}
+
+function clearAccountDropIndicators() {
+  if (!nodes.accounts) return;
+  nodes.accounts.querySelectorAll(".row-card.account").forEach((row) => {
+    row.classList.remove("is-drag-source", "is-drop-before", "is-drop-after");
+  });
+}
+
+function setAccountDropIndicator(targetRow, placement) {
+  if (!nodes.accounts) return;
+  nodes.accounts.querySelectorAll(".row-card.account").forEach((row) => {
+    const isTarget = row === targetRow;
+    row.classList.toggle("is-drop-before", isTarget && placement === "before");
+    row.classList.toggle("is-drop-after", isTarget && placement === "after");
+  });
+}
+
+function reorderAccounts(environment, sourceId, targetId, placement) {
+  const accounts = environment?.accounts || [];
+  const sourceIndex = accounts.findIndex((account) => account.id === sourceId);
+  const targetIndex = accounts.findIndex((account) => account.id === targetId);
+  if (sourceIndex < 0 || targetIndex < 0 || sourceIndex === targetIndex) return false;
+
+  const [movedAccount] = accounts.splice(sourceIndex, 1);
+  const adjustedTargetIndex = sourceIndex < targetIndex ? targetIndex - 1 : targetIndex;
+  const insertIndex = placement === "after" ? adjustedTargetIndex + 1 : adjustedTargetIndex;
+  accounts.splice(insertIndex, 0, movedAccount);
+  return true;
 }
 
 function accountHasInput(account) {
@@ -524,6 +554,8 @@ function createIconGraphic(name) {
 
   if (name === "edit") {
     path.setAttribute("d", "M12 20h9M16.5 3.5a2.1 2.1 0 1 1 3 3L7 19l-4 1 1-4Z");
+  } else if (name === "drag") {
+    path.setAttribute("d", "M9 5v14M15 5v14M6 8h0M6 12h0M6 16h0M18 8h0M18 12h0M18 16h0");
   } else {
     path.setAttribute("d", "M3 6h18M8 6V4h8v2m-7 0v13m6-13v13M6 6l1 14h10l1-14");
   }
@@ -754,11 +786,14 @@ function createRuleRow(rule, index) {
 function createAccountRow(account, index) {
   const row = document.createElement("div");
   row.className = "row-card account";
+  row.dataset.accountId = account.id;
 
-  const label = document.createElement("input");
-  label.type = "text";
-  label.placeholder = t("accountLabelPlaceholder");
-  label.value = account.label || "";
+  const dragHandle = document.createElement("button");
+  dragHandle.type = "button";
+  dragHandle.className = "account-drag-handle";
+  dragHandle.title = t("dragToReorder");
+  dragHandle.draggable = true;
+  dragHandle.textContent = String(index + 1);
 
   const username = document.createElement("input");
   username.type = "text";
@@ -769,6 +804,11 @@ function createAccountRow(account, index) {
   password.type = "password";
   password.placeholder = t("passwordPlaceholder");
   password.value = account.password || "";
+
+  const label = document.createElement("input");
+  label.type = "text";
+  label.placeholder = t("accountLabelPlaceholder");
+  label.value = account.label || "";
 
   const defaultWrap = document.createElement("label");
   defaultWrap.className = "row-check";
@@ -784,6 +824,43 @@ function createAccountRow(account, index) {
   remove.className = "remove-button";
   remove.textContent = "x";
   remove.title = t("removeAccount");
+
+  dragHandle.addEventListener("dragstart", (event) => {
+    draggingAccountId = account.id;
+    clearAccountDropIndicators();
+    row.classList.add("is-drag-source");
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = "move";
+      event.dataTransfer.setData("text/plain", account.id);
+    }
+  });
+
+  dragHandle.addEventListener("dragend", () => {
+    draggingAccountId = "";
+    clearAccountDropIndicators();
+  });
+
+  row.addEventListener("dragover", (event) => {
+    if (!draggingAccountId || draggingAccountId === account.id) return;
+    event.preventDefault();
+    const rect = row.getBoundingClientRect();
+    const placement = event.clientY < rect.top + rect.height / 2 ? "before" : "after";
+    setAccountDropIndicator(row, placement);
+    if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+  });
+
+  row.addEventListener("drop", (event) => {
+    if (!draggingAccountId || draggingAccountId === account.id) return;
+    event.preventDefault();
+    const placement = row.classList.contains("is-drop-after") ? "after" : "before";
+    const environment = selectedEnvironment();
+    const didMove = reorderAccounts(environment, draggingAccountId, account.id, placement);
+    draggingAccountId = "";
+    clearAccountDropIndicators();
+    if (!didMove) return;
+    render();
+    markChanged();
+  });
 
   const update = () => {
     const environment = selectedEnvironment();
@@ -822,7 +899,7 @@ function createAccountRow(account, index) {
     markChanged();
   });
 
-  row.append(label, username, password, defaultWrap, remove);
+  row.append(dragHandle, username, password, label, defaultWrap, remove);
   return row;
 }
 
@@ -1146,7 +1223,7 @@ function duplicateEnvironment(groupId) {
 function deleteEnvironment() {
   const environment = selectedEnvironment();
   if (!environment) return;
-  const name = markerLabel(environment);
+  const name = typeof environment.name === "string" && environment.name.trim() ? environment.name.trim() : t("environmentFallback");
   if (!window.confirm(t("confirmDeleteEnvironment", [name]))) return;
   const currentGroupId = environment.groupId;
   settings.environments = settings.environments.filter((item) => item.id !== environment.id);

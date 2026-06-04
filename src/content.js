@@ -57,6 +57,13 @@
     return watermarkText || name || t("environmentFallback");
   }
 
+  function accountDisplayLabel(account) {
+    const username = String(account?.username || "").trim();
+    const label = String(account?.label || "").trim();
+    if (username && label) return `${username} (${label})`;
+    return username || label || t("accountFallback");
+  }
+
   function applyTitle(environment) {
     if (!environment.titlePrefix) return;
     const badge = markerLabel(environment);
@@ -261,14 +268,24 @@
     input.dispatchEvent(new Event("change", { bubbles: true }));
   }
 
-  function showToast(message) {
+  function showToast(account) {
     document.querySelectorAll('[data-envmate-root="toast"]').forEach((node) => node.remove());
     const toast = document.createElement("div");
     toast.className = "envmate-toast";
     toast.dataset.envmateRoot = "toast";
-    toast.textContent = message;
+    toast.style.setProperty("--envmate-color", activeEnvironment?.badgeColor || activeEnvironment?.color || "#2563eb");
+
+    const title = document.createElement("div");
+    title.className = "envmate-toast__title";
+    title.textContent = t("defaultFill");
+
+    const detail = document.createElement("div");
+    detail.className = "envmate-toast__detail";
+    detail.textContent = accountDisplayLabel(account);
+
+    toast.append(title, detail);
     document.documentElement.append(toast);
-    window.setTimeout(() => toast.remove(), 1800);
+    window.setTimeout(() => toast.remove(), 2200);
   }
 
   function fillAccount(account) {
@@ -344,7 +361,7 @@
       attempts += 1;
       const result = fillAccount(account);
       if (result.usernameFilled || result.passwordFilled) {
-        showToast(t("autoFilledAccount", [account.label || account.username || t("accountFallback")]));
+        showToast(account);
         clearAutoFill();
         return true;
       }
@@ -366,50 +383,9 @@
     }
   }
 
-  function showAccountPanel(environment) {
-    document.querySelectorAll('[data-envmate-root="login-panel"]').forEach((node) => node.remove());
-    if (!environment?.accounts?.length) return;
-
-    const panel = document.createElement("div");
-    panel.className = "envmate-login-panel";
-    panel.dataset.envmateRoot = "login-panel";
-    panel.style.setProperty("--envmate-color", environment.badgeColor || environment.color || "#2563eb");
-    panel.style.setProperty("--envmate-text-color", environment.badgeTextColor || environment.textColor || "#ffffff");
-
-    const head = document.createElement("div");
-    head.className = "envmate-login-panel__head";
-    head.textContent = environment.name || t("extName");
-
-    const close = document.createElement("button");
-    close.type = "button";
-    close.className = "envmate-login-panel__close";
-    close.textContent = "x";
-    close.addEventListener("click", () => panel.remove());
-    head.append(close);
-
-    const body = document.createElement("div");
-    body.className = "envmate-login-panel__body";
-    environment.accounts.forEach((account) => {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "envmate-login-panel__button";
-      button.textContent = account.label || account.username || t("accountFallback");
-      button.addEventListener("click", () => fillAccount(account));
-      body.append(button);
-    });
-
-    panel.append(head, body);
-    document.documentElement.append(panel);
-  }
-
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
     if (message?.type === "ENVMATE_GET_PAGE_ENV") {
       sendResponse({ environment: activeEnvironment, url: window.location.href });
-      return true;
-    }
-    if (message?.type === "ENVMATE_SHOW_ACCOUNTS") {
-      showAccountPanel(activeEnvironment);
-      sendResponse({ ok: Boolean(activeEnvironment?.accounts?.length) });
       return true;
     }
     if (message?.type === "ENVMATE_FILL_ACCOUNT") {

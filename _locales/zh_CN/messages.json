@@ -105,24 +105,23 @@
   "newEnvironmentCopy": { "message": "$NAME$ 副本", "placeholders": { "name": { "content": "$1" } } },
   "noRulesHint": { "message": "还没有规则。添加一条 URL 规则后，EnvMate 才能识别这个环境。" },
   "noAccountsHint": { "message": "还没有账号。添加测试账号后，可以一键填充。" },
-  "emptyAccountError": { "message": "测试账号未填写信息。请填写账号名称、用户名或密码，或者删除这条空账号。" },
+  "emptyAccountError": { "message": "测试账号未填写信息。请填写用途、用户名或密码，或者删除这条空账号。" },
+  "dragToReorder": { "message": "拖动调整顺序" },
   "removeRule": { "message": "删除规则" },
   "removeAccount": { "message": "删除账号" },
   "currentEnvironment": { "message": "当前环境" },
   "loadingCurrentTab": { "message": "正在读取当前标签页..." },
   "openSettings": { "message": "打开设置" },
   "checking": { "message": "检查中..." },
-  "showPanel": { "message": "显示面板" },
   "noActiveTab": { "message": "没有当前标签页" },
   "noMatch": { "message": "未匹配" },
   "addRuleForUrl": { "message": "打开设置，为当前 URL 添加规则。" },
-  "noAccountsForPage": { "message": "当前页面没有测试账号。" },
   "noAccountsConfigured": { "message": "没有配置账号。" },
   "noEnvironmentsConfigured": { "message": "没有配置环境。" },
   "accountFallback": { "message": "账号" },
   "envNamePlaceholder": { "message": "测试环境" },
   "envBadgePlaceholder": { "message": "TEST" },
-  "accountLabelPlaceholder": { "message": "管理员" },
+  "accountLabelPlaceholder": { "message": "用途（可选）" },
   "usernamePlaceholder": { "message": "用户名" },
   "passwordPlaceholder": { "message": "密码" },
   "markerTitle": { "message": "EnvMate 环境标记" },
@@ -142,6 +141,12 @@
     }
   },
   "defaultFill": { "message": "自动填充" },
+  "showMoreAccounts": {
+    "message": "显示更多（+$COUNT$）",
+    "placeholders": {
+      "count": { "content": "$1" }
+    }
+  },
   "autoFilledAccount": {
     "message": "EnvMate 已填充 $ACCOUNT$",
     "placeholders": {

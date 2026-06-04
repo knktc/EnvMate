@@ -123,75 +123,30 @@
   white-space: nowrap;
 }
 
-.envmate-login-panel {
-  position: fixed;
-  right: 12px;
-  bottom: 12px;
-  z-index: 2147483647;
-  width: min(280px, calc(100vw - 24px));
-  border: 1px solid rgba(15, 23, 42, 0.12);
-  border-radius: 8px;
-  background: #fff;
-  box-shadow: 0 16px 48px rgba(15, 23, 42, 0.22);
-  color: #111827;
-  font: 13px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  overflow: hidden;
-}
-
-.envmate-login-panel__head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  padding: 10px 12px;
-  color: var(--envmate-text-color, #fff);
-  background: var(--envmate-color, #2563eb);
-  font-weight: 700;
-}
-
-.envmate-login-panel__close {
-  border: 0;
-  border-radius: 5px;
-  color: inherit;
-  background: rgba(255, 255, 255, 0.18);
-  cursor: pointer;
-  font: inherit;
-  padding: 2px 7px;
-}
-
-.envmate-login-panel__body {
-  display: grid;
-  gap: 8px;
-  padding: 10px;
-}
-
-.envmate-login-panel__button {
-  width: 100%;
-  border: 1px solid #d1d5db;
-  border-radius: 6px;
-  background: #f9fafb;
-  color: #111827;
-  cursor: pointer;
-  font: 600 13px/1.2 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  padding: 8px 10px;
-  text-align: left;
-}
-
-.envmate-login-panel__button:hover {
-  background: #eef2ff;
-  border-color: #c7d2fe;
-}
-
 .envmate-toast {
   position: fixed;
   right: 12px;
   bottom: 12px;
   z-index: 2147483647;
   max-width: min(320px, calc(100vw - 24px));
-  border-radius: 7px;
-  background: #111827;
-  color: #fff;
-  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.24);
+  display: grid;
+  gap: 4px;
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  border-left: 4px solid var(--envmate-color, #2563eb);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
+  color: #111827;
+  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.18);
+  padding: 10px 12px 10px 11px;
+}
+
+.envmate-toast__title {
+  color: #0f172a;
+  font: 700 12px/1.2 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.envmate-toast__detail {
+  color: #475569;
   font: 600 13px/1.35 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  padding: 9px 11px;
 }

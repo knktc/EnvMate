@@ -12,6 +12,7 @@
     });
 
     root.querySelectorAll("[data-i18n-title]").forEach((node) => {
+      if (node === document.documentElement) return;
       node.title = t(node.dataset.i18nTitle);
     });
 
