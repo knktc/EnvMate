@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en" data-i18n-title="extName">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>EnvMate</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <main class="popup">
+      <header class="header">
+        <div>
+          <h1 data-i18n="extName">EnvMate</h1>
+          <p id="current-url" data-i18n="loadingCurrentTab">Loading current tab...</p>
+        </div>
+        <button id="open-options" class="icon-button" type="button" title="Open settings" data-i18n-title="openSettings">⚙</button>
+      </header>
+
+      <section id="environment-card" class="environment-card">
+        <div class="environment-card__head">
+          <div class="environment-card__label" data-i18n="currentEnvironment">Current environment</div>
+          <label id="environment-toggle" class="toggle-control" title="Enable this environment" data-i18n-title="enableEnvironment">
+            <input id="environment-enabled" type="checkbox" />
+            <span class="toggle-control__switch" aria-hidden="true"></span>
+          </label>
+        </div>
+        <div id="environment-name" class="environment-card__name" data-i18n="checking">Checking...</div>
+        <div id="environment-meta" class="environment-card__meta"></div>
+      </section>
+
+      <section id="accounts-section" class="section">
+        <div class="section__head">
+          <h2 data-i18n="testAccounts">Test Accounts</h2>
+          <button id="show-panel" class="small-button" type="button" data-i18n="showPanel">Show Panel</button>
+        </div>
+        <div id="accounts" class="account-list"></div>
+      </section>
+    </main>
+    <script src="../src/i18n.js"></script>
+    <script src="popup.js"></script>
+  </body>
+</html>
