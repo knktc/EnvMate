@@ -140,11 +140,12 @@
     badge.className = "envmate-badge";
     badge.dataset.envmateRoot = "badge";
     badge.dataset.position = environment.badgePosition || "top-right";
-    badge.dataset.style = environment.badgeStyle || "pill";
+    badge.dataset.style = environment.badgeStyle || "slanted";
     badge.style.setProperty("--envmate-color", environment.badgeColor || environment.color || "#2563eb");
     badge.style.setProperty("--envmate-text-color", environment.badgeTextColor || environment.textColor || "#ffffff");
-    badge.style.setProperty("--envmate-badge-offset", `${environment.badgeOffset ?? 12}px`);
+    badge.style.setProperty("--envmate-badge-offset", "12px");
     badge.style.setProperty("--envmate-badge-opacity", environment.badgeOpacity ?? 1);
+    badge.style.setProperty("--envmate-badge-scale", environment.badgeScale ?? 1);
     badge.style.setProperty("--envmate-badge-size", `${environment.badgeSize ?? 14}px`);
     badge.title = t("markerTitle");
 
