@@ -181,11 +181,61 @@ h2 {
   gap: 7px;
 }
 
+.account-list__more {
+  justify-content: center;
+  color: var(--primary);
+  font-weight: 700;
+}
+
 .account-button,
 .link-button {
   width: 100%;
-  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
   text-align: left;
+}
+
+.account-button__summary {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.account-button__title {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.account-button__tag,
+.account-button__status {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.account-button__tag {
+  color: #1d4ed8;
+  background: #eff6ff;
+}
+
+.account-button__status {
+  flex-shrink: 0;
+  color: #0f766e;
+  background: #ecfdf5;
 }
 
 .account-button:hover,

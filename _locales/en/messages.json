@@ -107,25 +107,24 @@
   "newEnvironmentCopy": { "message": "$NAME$ Copy", "placeholders": { "name": { "content": "$1" } } },
   "noRulesHint": { "message": "No rules. Add one URL rule so EnvMate can recognize this environment." },
   "noAccountsHint": { "message": "No accounts. Add test accounts for one-click filling." },
-  "emptyAccountError": { "message": "A test account has no information. Fill in a label, username, or password, or delete the empty account." },
+  "emptyAccountError": { "message": "A test account has no information. Fill in a purpose, username, or password, or delete the empty account." },
+  "dragToReorder": { "message": "Drag to reorder" },
   "removeRule": { "message": "Remove rule" },
   "removeAccount": { "message": "Remove account" },
   "currentEnvironment": { "message": "Current environment" },
   "loadingCurrentTab": { "message": "Loading current tab..." },
   "openSettings": { "message": "Open settings" },
   "checking": { "message": "Checking..." },
-  "showPanel": { "message": "Show Panel" },
   "noActiveTab": { "message": "No active tab" },
   "noMatch": { "message": "No match" },
   "addRuleForUrl": { "message": "Open settings to add a rule for this URL." },
-  "noAccountsForPage": { "message": "No test accounts for this page." },
   "noAccountsConfigured": { "message": "No accounts configured." },
   "noEnvironmentsConfigured": { "message": "No environments configured." },
   "accountFallback": { "message": "Account" }
   ,
   "envNamePlaceholder": { "message": "Test Environment" },
   "envBadgePlaceholder": { "message": "TEST" },
-  "accountLabelPlaceholder": { "message": "Admin" },
+  "accountLabelPlaceholder": { "message": "Purpose (optional)" },
   "usernamePlaceholder": { "message": "Username" },
   "passwordPlaceholder": { "message": "Password" }
   ,
@@ -146,6 +145,12 @@
     }
   },
   "defaultFill": { "message": "Auto Fill" },
+  "showMoreAccounts": {
+    "message": "Show More (+$COUNT$)",
+    "placeholders": {
+      "count": { "content": "$1" }
+    }
+  },
   "autoFilledAccount": {
     "message": "EnvMate filled $ACCOUNT$",
     "placeholders": {
