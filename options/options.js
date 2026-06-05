@@ -2,6 +2,9 @@ const STORAGE_KEY = "envmateSettings";
 const DEFAULT_GROUP_ID = "default";
 const ENVIRONMENT_COLOR_PRESETS = ["#2563eb", "#059669", "#dc2626", "#7c3aed", "#ea580c", "#0f766e", "#db2777", "#4f46e5"];
 const TEXT_COLOR_PRESETS = ["#ffffff", "#f8fafc", "#e2e8f0", "#111827", "#0f172a", "#334155"];
+const EXPORTED_PASSWORD_SCHEME = "emsec";
+const EXPORTED_PASSWORD_VERSION = "v1";
+const EXPORTED_PASSWORD_KEY_V1 = "EnvMate export password v1";
 
 const SAMPLE_SETTINGS = {
   groups: [
@@ -169,6 +172,95 @@ function pickEnvironmentColor() {
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
+}
+
+function bytesToBase64(bytes) {
+  let binary = "";
+  const chunkSize = 0x8000;
+  for (let index = 0; index < bytes.length; index += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(index, index + chunkSize));
+  }
+  return window.btoa(binary);
+}
+
+function base64ToBytes(value) {
+  const binary = window.atob(value);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) {
+    bytes[index] = binary.charCodeAt(index);
+  }
+  return bytes;
+}
+
+function encodeExportedPasswordV1(value) {
+  if (!value) return "";
+  const source = new TextEncoder().encode(String(value));
+  const key = new TextEncoder().encode(EXPORTED_PASSWORD_KEY_V1);
+  const mixed = new Uint8Array(source.length);
+  for (let index = 0; index < source.length; index += 1) {
+    mixed[index] = source[index] ^ key[index % key.length] ^ ((index * 29 + 17) & 0xff);
+  }
+  return bytesToBase64(mixed);
+}
+
+function decodeExportedPasswordV1(payload) {
+  const mixed = base64ToBytes(payload);
+  const key = new TextEncoder().encode(EXPORTED_PASSWORD_KEY_V1);
+  const source = new Uint8Array(mixed.length);
+  for (let index = 0; index < mixed.length; index += 1) {
+    source[index] = mixed[index] ^ key[index % key.length] ^ ((index * 29 + 17) & 0xff);
+  }
+  return new TextDecoder().decode(source);
+}
+
+function obfuscateExportedPassword(value) {
+  if (!value) return "";
+  const payload = encodeExportedPasswordV1(value);
+  return `${EXPORTED_PASSWORD_SCHEME}:${EXPORTED_PASSWORD_VERSION}:${payload}`;
+}
+
+function revealImportedPassword(value) {
+  if (!value) return "";
+  if (typeof value !== "string") throw new Error(t("invalidImportedPassword"));
+  const [scheme, version, ...payloadParts] = value.split(":");
+  const payload = payloadParts.join(":");
+  if (!scheme || !version || !payload || scheme !== EXPORTED_PASSWORD_SCHEME) {
+    throw new Error(t("invalidImportedPassword"));
+  }
+  try {
+    if (version === "v1") return decodeExportedPasswordV1(payload);
+    throw new Error(t("invalidImportedPassword"));
+  } catch (_) {
+    throw new Error(t("invalidImportedPassword"));
+  }
+}
+
+function buildExportSettings() {
+  const next = clone(settings);
+  next.environments = (next.environments || []).map((environment) => ({
+    ...environment,
+    accounts: Array.isArray(environment.accounts)
+      ? environment.accounts.map((account) => ({
+          ...account,
+          password: obfuscateExportedPassword(account.password || "")
+        }))
+      : []
+  }));
+  return next;
+}
+
+function decodeImportedSettings(value) {
+  const next = clone(value);
+  next.environments = (next.environments || []).map((environment) => ({
+    ...environment,
+    accounts: Array.isArray(environment.accounts)
+      ? environment.accounts.map((account) => ({
+          ...account,
+          password: revealImportedPassword(account.password || "")
+        }))
+      : []
+  }));
+  return next;
 }
 
 function setStatus(message, isError = false) {
@@ -1253,7 +1345,7 @@ async function saveSettings() {
 }
 
 function exportSettings() {
-  const blob = new Blob([JSON.stringify(settings, null, 2)], { type: "application/json" });
+  const blob = new Blob([JSON.stringify(buildExportSettings(), null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
@@ -1423,7 +1515,7 @@ bindNodeEvent(nodes.importConfig, "change", async () => {
   const file = nodes.importConfig.files?.[0];
   if (!file) return;
   try {
-    applySettings(JSON.parse(await file.text()), t("importedSaveToApply"));
+    applySettings(decodeImportedSettings(JSON.parse(await file.text())), t("importedSaveToApply"));
   } catch (error) {
     setStatus(error.message, true);
   } finally {

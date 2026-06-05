@@ -202,7 +202,7 @@ h2 {
   min-width: 0;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
@@ -220,22 +220,37 @@ h2 {
   display: inline-flex;
   align-items: center;
   border-radius: 999px;
-  padding: 2px 8px;
+  padding: 3px 9px;
   font-size: 11px;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.4;
   white-space: nowrap;
+  letter-spacing: 0;
 }
 
 .account-button__tag {
-  color: #1d4ed8;
-  background: #eff6ff;
+  color: #475569;
+  border: 1px solid #dbe4f0;
+  background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85);
 }
 
 .account-button__status {
   flex-shrink: 0;
-  color: #0f766e;
-  background: #ecfdf5;
+  gap: 6px;
+  color: #2859c5;
+  border: 1px solid #d7e4ff;
+  background: linear-gradient(180deg, #f9fbff 0%, #eef4ff 100%);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+.account-button__status::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: #5b8def;
+  box-shadow: 0 0 0 3px rgba(91, 141, 239, 0.14);
 }
 
 .account-button:hover,
