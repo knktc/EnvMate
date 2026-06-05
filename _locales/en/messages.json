@@ -10,6 +10,15 @@
   "loadSample": { "message": "Load Sample" },
   "export": { "message": "Export" },
   "import": { "message": "Import" },
+  "about": { "message": "Support" },
+  "close": { "message": "Close" },
+  "displayLanguage": { "message": "Display Language" },
+  "localeAuto": { "message": "Follow Browser" },
+  "localeZhCN": { "message": "Simplified Chinese" },
+  "localeEn": { "message": "English" },
+  "cancel": { "message": "Cancel" },
+  "exportSelected": { "message": "Export Selected" },
+  "importSelected": { "message": "Import Selected" },
   "save": { "message": "Save" },
   "savePending": { "message": "Save Changes" },
   "duplicate": { "message": "Duplicate" },
@@ -92,7 +101,52 @@
   "confirmUnsavedSwitch": { "message": "You have unsaved changes. Continuing will discard them. Continue switching?" },
   "exported": { "message": "Exported" },
   "importedSaveToApply": { "message": "Imported. Click Save to apply." },
+  "importedApplied": { "message": "Imported and applied." },
   "sampleLoadedSaveToApply": { "message": "Sample loaded. Click Save to apply." },
+  "sampleLoaded": { "message": "Sample loaded and applied." },
+  "sampleAlreadyLoaded": { "message": "Sample group already exists. Switched to it." },
+  "sampleGroupName": { "message": "Sample Group" },
+  "sampleEnvironmentProd": { "message": "Production Sample" },
+  "sampleEnvironmentDev": { "message": "Development Sample" },
+  "exportDialogTitle": { "message": "Export Data" },
+  "exportDialogHint": { "message": "Choose groups first. Expand a group if you want to select environments individually." },
+  "exportSelectedCount": {
+    "message": "Export $COUNT$ environments",
+    "placeholders": {
+      "count": { "content": "$1" }
+    }
+  },
+  "importDialogTitle": { "message": "Import Data" },
+  "importDialogHint": { "message": "Choose a file or drop it here, then select which groups and environments to import." },
+  "aboutDialogTitle": { "message": "Support EnvMate" },
+  "aboutContactTitle": { "message": "Contact" },
+  "aboutContactBody": { "message": "EnvMate is open source. The project lives on GitHub, and pull requests are always welcome. If you run into any issues, feel free to email me directly." },
+  "aboutGithubLabel": { "message": "GitHub" },
+  "aboutWebsiteLabel": { "message": "Website" },
+  "aboutToolsLabel": { "message": "Tools" },
+  "aboutEmailLabel": { "message": "Email" },
+  "aboutMeTitle": { "message": "About Me" },
+  "aboutMeBody": { "message": "You can also find more of my writing and small tools on the sites below." },
+  "aboutWechatTitle": { "message": "Middle-Aged Engineer Survival Guide" },
+  "aboutWechatBody": { "message": "Scan with WeChat to catch new posts and fresh tinkering notes first." },
+  "importSelectedCount": {
+    "message": "Import $COUNT$ environments",
+    "placeholders": {
+      "count": { "content": "$1" }
+    }
+  },
+  "importDropzoneTitle": { "message": "Choose File or Drop Here" },
+  "importDropzoneHint": { "message": "Only JSON files exported from EnvMate are supported." },
+  "importNoFile": { "message": "Choose a file to preview importable groups and environments." },
+  "selectionEmpty": { "message": "No selectable data." },
+  "showEnvironments": { "message": "Show Environments" },
+  "hideEnvironments": { "message": "Hide Environments" },
+  "groupEnvironmentCount": {
+    "message": "$COUNT$ environments",
+    "placeholders": {
+      "count": { "content": "$1" }
+    }
+  },
   "noEnvironments": { "message": "No environments yet." },
   "environmentFallback": { "message": "Environment" },
   "noUrlRules": { "message": "No URL rules" },
@@ -119,6 +173,9 @@
   "noActiveTab": { "message": "No active tab" },
   "noMatch": { "message": "No match" },
   "addRuleForUrl": { "message": "Open settings to add a rule for this URL." },
+  "quickAddCurrentPage": { "message": "Add Current Site" },
+  "quickAddEnvironmentCreated": { "message": "Created an environment from this page." },
+  "quickAddEnvironmentExists": { "message": "An environment with the same rule already exists. Switched to it." },
   "noAccountsConfigured": { "message": "No accounts configured." },
   "noEnvironmentsConfigured": { "message": "No environments configured." },
   "accountFallback": { "message": "Account" }

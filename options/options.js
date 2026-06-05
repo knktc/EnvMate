@@ -1,107 +1,18 @@
 const STORAGE_KEY = "envmateSettings";
 const DEFAULT_GROUP_ID = "default";
+const SAMPLE_GROUP_ID = "sample";
 const ENVIRONMENT_COLOR_PRESETS = ["#2563eb", "#059669", "#dc2626", "#7c3aed", "#ea580c", "#0f766e", "#db2777", "#4f46e5"];
 const TEXT_COLOR_PRESETS = ["#ffffff", "#f8fafc", "#e2e8f0", "#111827", "#0f172a", "#334155"];
 const EXPORTED_PASSWORD_SCHEME = "emsec";
 const EXPORTED_PASSWORD_VERSION = "v1";
 const EXPORTED_PASSWORD_KEY_V1 = "EnvMate export password v1";
 
-const SAMPLE_SETTINGS = {
-  groups: [
-    { id: DEFAULT_GROUP_ID, name: "Default Group" },
-    { id: "boss", name: "BOSS System" },
-    { id: "installer", name: "Installer System" }
-  ],
-  environments: [
-    {
-      id: "dev",
-      groupId: "boss",
-      name: "Development",
-      enabled: true,
-      badge: "DEV",
-      badgeEnabled: true,
-      badgeColor: "#2563eb",
-      badgeTextColor: "#ffffff",
-      badgeStyle: "slanted",
-      badgePosition: "top-right",
-      badgeOffset: 12,
-      badgeOpacity: 1,
-      badgeScale: 1,
-      badgeSize: 14,
-      watermarkText: "Development",
-      watermarkColor: "#2563eb",
-      watermarkEnabled: false,
-      watermarkOpacity: 0.08,
-      watermarkAngle: -24,
-      watermarkSize: 42,
-      watermarkGap: 80,
-      titlePrefix: true,
-      markerMode: "badge",
-      rules: [
-        { type: "wildcard", value: "https://dev.example.com/*" },
-        { type: "wildcard", value: "http://localhost:*/*" }
-      ],
-      accounts: [
-        { id: "dev-admin", label: "Admin", username: "admin", password: "admin123", defaultFill: false },
-        { id: "dev-user", label: "Tester", username: "tester", password: "tester123", defaultFill: false }
-      ]
-    },
-    {
-      id: "test",
-      groupId: "boss",
-      name: "Test",
-      enabled: true,
-      badge: "TEST",
-      badgeEnabled: true,
-      badgeColor: "#059669",
-      badgeTextColor: "#ffffff",
-      badgeStyle: "slanted",
-      badgePosition: "top-right",
-      badgeOffset: 12,
-      badgeOpacity: 1,
-      badgeScale: 1,
-      badgeSize: 14,
-      watermarkText: "Test",
-      watermarkColor: "#059669",
-      watermarkEnabled: true,
-      watermarkOpacity: 0.08,
-      watermarkAngle: -24,
-      watermarkSize: 42,
-      watermarkGap: 80,
-      titlePrefix: true,
-      markerMode: "badge-watermark",
-      rules: [{ type: "wildcard", value: "https://test.example.com/*" }],
-      accounts: [{ id: "test-admin", label: "Admin", username: "admin", password: "test123", defaultFill: false }]
-    },
-    {
-      id: "pre",
-      groupId: "installer",
-      name: "Pre Release",
-      enabled: true,
-      badge: "PRE",
-      badgeEnabled: true,
-      badgeColor: "#dc2626",
-      badgeTextColor: "#ffffff",
-      badgeStyle: "slanted",
-      badgePosition: "top-right",
-      badgeOffset: 12,
-      badgeOpacity: 1,
-      badgeScale: 1,
-      badgeSize: 14,
-      watermarkText: "Pre Release",
-      watermarkColor: "#dc2626",
-      watermarkEnabled: true,
-      watermarkOpacity: 0.08,
-      watermarkAngle: -24,
-      watermarkSize: 42,
-      watermarkGap: 80,
-      titlePrefix: true,
-      markerMode: "badge-watermark",
-      rules: [{ type: "prefix", value: "https://pre.example.com/" }],
-      accounts: []
-    }
-  ]
-};
+function createSampleSettings() {
+  return {
+    groups: [{ id: DEFAULT_GROUP_ID, name: t("defaultGroup") }],
+    environments: []
+  };
+}
 
 const nodes = {
   list: document.querySelector("#environment-list"),
@@ -110,7 +21,10 @@ const nodes = {
   deleteEnvironment: document.querySelector("#delete-environment"),
   save: document.querySelector("#save-config"),
   exportConfig: document.querySelector("#export-config"),
+  importConfigTrigger: document.querySelector("#import-config-trigger"),
+  aboutTrigger: document.querySelector("#about-trigger"),
   importConfig: document.querySelector("#import-config"),
+  localeSwitcher: document.querySelector("#locale-switcher"),
   loadSample: document.querySelector("#load-sample"),
   addRule: document.querySelector("#add-rule"),
   addAccount: document.querySelector("#add-account"),
@@ -146,13 +60,30 @@ const nodes = {
   watermarkPreviewSurface: document.querySelector("#watermark-preview-surface"),
   sectionNavButtons: Array.from(document.querySelectorAll("[data-scroll-target]")),
   workspaceShell: document.querySelector(".workspace-shell"),
-  toolbox: document.querySelector("#workspace-toolbox")
+  toolbox: document.querySelector("#workspace-toolbox"),
+  modalBackdrop: document.querySelector("#selection-modal-backdrop"),
+  exportModal: document.querySelector("#export-modal"),
+  exportModalClose: document.querySelector("#export-modal-close"),
+  exportModalCancel: document.querySelector("#export-modal-cancel"),
+  exportModalConfirm: document.querySelector("#export-modal-confirm"),
+  exportSelectionList: document.querySelector("#export-selection-list"),
+  importModal: document.querySelector("#import-modal"),
+  importModalClose: document.querySelector("#import-modal-close"),
+  importModalCancel: document.querySelector("#import-modal-cancel"),
+  importModalConfirm: document.querySelector("#import-modal-confirm"),
+  importSelectionList: document.querySelector("#import-selection-list"),
+  importDropzone: document.querySelector("#import-dropzone"),
+  importDropzoneDetail: document.querySelector("#import-dropzone-detail"),
+  aboutModal: document.querySelector("#about-modal"),
+  aboutModalClose: document.querySelector("#about-modal-close"),
+  aboutModalConfirm: document.querySelector("#about-modal-confirm"),
+  aboutWechatSection: document.querySelector("#about-wechat-section")
 };
 
 const t = window.envmateI18n.t;
 
-let settings = structuredClone(SAMPLE_SETTINGS);
-let savedSettingsSnapshot = clone(SAMPLE_SETTINGS);
+let settings = createSampleSettings();
+let savedSettingsSnapshot = clone(settings);
 let selectedId = null;
 let selectedGroupId = DEFAULT_GROUP_ID;
 let isRendering = false;
@@ -161,6 +92,26 @@ let hasUnsavedChanges = false;
 let scrollTargetLockId = "";
 let scrollSettleTimer = 0;
 let draggingAccountId = "";
+let draggingEnvironmentId = "";
+let exportSelectionState = null;
+let importPreviewSettings = null;
+let importSelectionState = null;
+let activeModalName = "";
+
+function syncLocaleSwitcher() {
+  if (!nodes.localeSwitcher || !window.envmateI18n?.getLocaleChoice) return;
+  const localeChoice = window.envmateI18n.getLocaleChoice();
+  if (localeChoice === "auto") {
+    const browserLocale = chrome.i18n.getUILanguage();
+    nodes.localeSwitcher.value = String(browserLocale || "").toLowerCase().startsWith("zh") ? "zh_CN" : "en";
+    return;
+  }
+  nodes.localeSwitcher.value = localeChoice;
+}
+
+function isChineseUi() {
+  return String(document.documentElement.lang || "").toLowerCase().startsWith("zh");
+}
 
 function uid(prefix) {
   return `${prefix}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`;
@@ -235,8 +186,8 @@ function revealImportedPassword(value) {
   }
 }
 
-function buildExportSettings() {
-  const next = clone(settings);
+function buildExportSettings(sourceSettings = settings) {
+  const next = clone(sourceSettings);
   next.environments = (next.environments || []).map((environment) => ({
     ...environment,
     accounts: Array.isArray(environment.accounts)
@@ -263,10 +214,274 @@ function decodeImportedSettings(value) {
   return next;
 }
 
+function groupedEnvironments(sourceSettings) {
+  return (sourceSettings.groups || [])
+    .map((group) => ({
+      id: group.id,
+      name: group.name,
+      environments: (sourceSettings.environments || []).filter((environment) => environment.groupId === group.id)
+    }))
+    .filter((group) => group.environments.length > 0);
+}
+
+function createSelectionState(groups) {
+  const state = { groups: {}, environments: {}, expanded: {} };
+  groups.forEach((group) => {
+    state.expanded[group.id] = false;
+    if (!group.environments.length) {
+      state.groups[group.id] = true;
+      return;
+    }
+    group.environments.forEach((environment) => {
+      state.environments[environment.id] = true;
+    });
+  });
+  return state;
+}
+
+function selectedEnvironmentCount(group, selectionState) {
+  return group.environments.filter((environment) => selectionState.environments[environment.id] !== false).length;
+}
+
+function groupSelectionStatus(group, selectionState) {
+  if (!group.environments.length) {
+    return {
+      checked: selectionState.groups[group.id] !== false,
+      indeterminate: false
+    };
+  }
+  const selectedCount = selectedEnvironmentCount(group, selectionState);
+  return {
+    checked: selectedCount === group.environments.length,
+    indeterminate: selectedCount > 0 && selectedCount < group.environments.length
+  };
+}
+
+function selectedTreeHasValue(groups, selectionState) {
+  return groups.some((group) => {
+    if (!group.environments.length) return selectionState.groups[group.id] !== false;
+    return selectedEnvironmentCount(group, selectionState) > 0;
+  });
+}
+
+function selectedEnvironmentTotal(groups, selectionState) {
+  return groups.reduce((total, group) => {
+    if (!group.environments.length) return total;
+    return total + selectedEnvironmentCount(group, selectionState);
+  }, 0);
+}
+
+function renderSelectionTree(container, groups, selectionState, options = {}) {
+  container.innerHTML = "";
+  container.classList.toggle("selection-tree--empty", !groups.length);
+
+  if (!groups.length) {
+    const empty = document.createElement("div");
+    empty.className = "empty";
+    empty.textContent = options.emptyText || t("selectionEmpty");
+    container.append(empty);
+    return;
+  }
+
+  groups.forEach((group) => {
+    const groupCard = document.createElement("section");
+    groupCard.className = "selection-item";
+
+    const row = document.createElement("div");
+    row.className = "selection-node selection-node--group";
+
+    const disclosure = document.createElement("button");
+    disclosure.type = "button";
+    disclosure.className = "selection-disclosure";
+    disclosure.disabled = !group.environments.length;
+    disclosure.hidden = !group.environments.length;
+    disclosure.title = selectionState.expanded[group.id] ? t("hideEnvironments") : t("showEnvironments");
+    disclosure.classList.toggle("is-expanded", selectionState.expanded[group.id]);
+    disclosure.addEventListener("click", () => {
+      selectionState.expanded[group.id] = !selectionState.expanded[group.id];
+      renderSelectionTree(container, groups, selectionState, options);
+    });
+
+    const checkLabel = document.createElement("label");
+    checkLabel.className = "selection-check";
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    const selection = groupSelectionStatus(group, selectionState);
+    checkbox.checked = selection.checked;
+    checkbox.indeterminate = selection.indeterminate;
+
+    checkbox.addEventListener("change", () => {
+      if (!group.environments.length) {
+        selectionState.groups[group.id] = checkbox.checked;
+      } else {
+        group.environments.forEach((environment) => {
+          selectionState.environments[environment.id] = checkbox.checked;
+        });
+      }
+      renderSelectionTree(container, groups, selectionState, options);
+      options.onChange?.();
+    });
+
+    const summary = document.createElement("span");
+    summary.className = "selection-group__summary";
+    const icon = document.createElement("span");
+    icon.className = "selection-icon selection-icon--group";
+    icon.setAttribute("aria-hidden", "true");
+    const title = document.createElement("span");
+    title.className = "selection-group__title";
+    title.textContent = group.name;
+    const meta = document.createElement("span");
+    meta.className = "selection-group__meta";
+    meta.textContent = group.environments.length
+      ? t("groupEnvironmentCount", [String(group.environments.length)])
+      : t("emptyGroup");
+    summary.append(title, meta);
+    checkLabel.append(checkbox, icon, summary);
+
+    row.append(disclosure, checkLabel);
+    groupCard.append(row);
+
+    if (group.environments.length && selectionState.expanded[group.id]) {
+      const children = document.createElement("div");
+      children.className = "selection-children";
+
+      group.environments.forEach((environment) => {
+        const childRow = document.createElement("div");
+        childRow.className = "selection-node selection-node--child";
+
+        const branch = document.createElement("span");
+        branch.className = "selection-branch";
+        branch.setAttribute("aria-hidden", "true");
+
+        const child = document.createElement("label");
+        child.className = "selection-check";
+        const childCheckbox = document.createElement("input");
+        childCheckbox.type = "checkbox";
+        childCheckbox.checked = selectionState.environments[environment.id] !== false;
+        childCheckbox.addEventListener("change", () => {
+          selectionState.environments[environment.id] = childCheckbox.checked;
+          renderSelectionTree(container, groups, selectionState, options);
+          options.onChange?.();
+        });
+
+        const childSummary = document.createElement("span");
+        childSummary.className = "selection-environment__summary";
+        const childIcon = document.createElement("span");
+        childIcon.className = "selection-icon selection-icon--environment";
+        childIcon.setAttribute("aria-hidden", "true");
+        const childTitle = document.createElement("span");
+        childTitle.className = "selection-environment__title";
+        childTitle.textContent = environment.name || t("environmentFallback");
+        const childMeta = document.createElement("span");
+        childMeta.className = "selection-environment__meta";
+        childMeta.textContent = environment.rules?.[0]?.value || t("noUrlRules");
+        childSummary.append(childTitle, childMeta);
+        child.append(childCheckbox, childIcon, childSummary);
+
+        childRow.append(branch, child);
+        children.append(childRow);
+      });
+
+      groupCard.append(children);
+    }
+
+    container.append(groupCard);
+  });
+}
+
+function buildSelectedSettings(sourceSettings, selectionState) {
+  const groups = groupedEnvironments(sourceSettings);
+  const nextGroups = [];
+  const nextEnvironments = [];
+
+  groups.forEach((group) => {
+    const selectedEnvironments = group.environments.filter((environment) => selectionState.environments[environment.id] !== false);
+    const includeGroup = group.environments.length
+      ? selectedEnvironments.length > 0
+      : selectionState.groups[group.id] !== false;
+    if (!includeGroup) return;
+    nextGroups.push({ id: group.id, name: group.name });
+    nextEnvironments.push(...selectedEnvironments.map((environment) => clone(environment)));
+  });
+
+  return {
+    groups: nextGroups,
+    environments: nextEnvironments
+  };
+}
+
+function uniqueGroupNameForImport(baseName, groups) {
+  if (!groups.some((group) => group.name === baseName)) return baseName;
+  let suffix = 2;
+  while (groups.some((group) => group.name === `${baseName} ${suffix}`)) {
+    suffix += 1;
+  }
+  return `${baseName} ${suffix}`;
+}
+
+function mergeImportedSettings(currentSettings, importedSubset) {
+  const next = clone(currentSettings);
+  const groupIdMap = new Map();
+  const existingEnvironmentIds = new Set((next.environments || []).map((environment) => environment.id).filter(Boolean));
+
+  (importedSubset.groups || []).forEach((group) => {
+    if (group.id === DEFAULT_GROUP_ID) {
+      groupIdMap.set(group.id, DEFAULT_GROUP_ID);
+      return;
+    }
+    const sameId = next.groups.find((item) => item.id === group.id);
+    if (sameId) {
+      groupIdMap.set(group.id, sameId.id);
+      return;
+    }
+    const sameName = next.groups.find((item) => item.name === group.name);
+    if (sameName) {
+      groupIdMap.set(group.id, sameName.id);
+      return;
+    }
+    const nextGroup = {
+      id: group.id || uid("group"),
+      name: uniqueGroupNameForImport(group.name || t("defaultGroup"), next.groups)
+    };
+    next.groups.push(nextGroup);
+    groupIdMap.set(group.id, nextGroup.id);
+  });
+
+  (importedSubset.environments || []).forEach((environment) => {
+    if (environment.id && existingEnvironmentIds.has(environment.id)) return;
+    const nextEnvironment = clone(environment);
+    nextEnvironment.id = environment.id || uid("env");
+    nextEnvironment.groupId = groupIdMap.get(environment.groupId) || DEFAULT_GROUP_ID;
+    next.environments.push(nextEnvironment);
+    if (nextEnvironment.id) existingEnvironmentIds.add(nextEnvironment.id);
+  });
+
+  return next;
+}
+
 function setStatus(message, isError = false) {
   if (!nodes.status) return;
   nodes.status.textContent = message;
   nodes.status.style.color = isError ? "#dc2626" : "#64748b";
+}
+
+async function handleLocaleChange(nextLocale) {
+  if (!window.envmateI18n?.setLocaleChoice) return;
+  await window.envmateI18n.setLocaleChoice(nextLocale);
+  syncLocaleSwitcher();
+  render();
+  if (activeModalName === "export" && exportSelectionState) {
+    syncExportModalState();
+  }
+  if (activeModalName === "import") {
+    if (importPreviewSettings && importSelectionState) {
+      syncImportModalState();
+    } else {
+      resetImportPreview();
+    }
+  }
+  syncAboutModalState();
+  setStatus(hasUnsavedChanges ? t("unsavedChanges") : t("ready"));
 }
 
 function syncSaveButtonState() {
@@ -279,6 +494,111 @@ function restoreSavedSettingsSnapshot() {
   settings = clone(savedSettingsSnapshot);
   hasUnsavedChanges = false;
   syncSaveButtonState();
+}
+
+async function persistSettingsSnapshot() {
+  await chrome.storage.local.set({ [STORAGE_KEY]: settings });
+  savedSettingsSnapshot = clone(settings);
+  hasUnsavedChanges = false;
+  syncSaveButtonState();
+}
+
+function setModalOpen(name, open) {
+  const modalMap = {
+    export: nodes.exportModal,
+    import: nodes.importModal,
+    about: nodes.aboutModal
+  };
+  const modal = modalMap[name];
+  if (!modal || !nodes.modalBackdrop) return;
+  modal.hidden = !open;
+  nodes.modalBackdrop.hidden = !open;
+  document.documentElement.classList.toggle("modal-open", open);
+  document.body.classList.toggle("modal-open", open);
+  activeModalName = open ? name : "";
+}
+
+function syncAboutModalState() {
+  if (!nodes.aboutWechatSection) return;
+  nodes.aboutWechatSection.hidden = !isChineseUi();
+}
+
+function openAboutModal() {
+  syncAboutModalState();
+  setModalOpen("about", true);
+}
+
+function closeAboutModal() {
+  setModalOpen("about", false);
+}
+
+function syncExportModalState() {
+  const groups = groupedEnvironments(settings);
+  renderSelectionTree(nodes.exportSelectionList, groups, exportSelectionState, {
+    onChange: syncExportModalState
+  });
+  const selectedCount = selectedEnvironmentTotal(groups, exportSelectionState);
+  nodes.exportModalConfirm.disabled = selectedCount === 0;
+  nodes.exportModalConfirm.textContent = t("exportSelectedCount", [String(selectedCount)]);
+}
+
+function openExportModal() {
+  exportSelectionState = createSelectionState(groupedEnvironments(settings));
+  syncExportModalState();
+  setModalOpen("export", true);
+}
+
+function closeExportModal() {
+  setModalOpen("export", false);
+}
+
+function resetImportPreview() {
+  importPreviewSettings = null;
+  importSelectionState = null;
+  nodes.importSelectionList.classList.add("selection-tree--empty");
+  nodes.importSelectionList.innerHTML = `<div class="empty">${t("importNoFile")}</div>`;
+  nodes.importDropzoneDetail.textContent = t("importDropzoneHint");
+  nodes.importModalConfirm.disabled = true;
+  nodes.importModalConfirm.textContent = t("importSelectedCount", ["0"]);
+}
+
+function syncImportModalState() {
+  if (!importPreviewSettings || !importSelectionState) {
+    resetImportPreview();
+    return;
+  }
+  const groups = groupedEnvironments(importPreviewSettings);
+  renderSelectionTree(nodes.importSelectionList, groups, importSelectionState, {
+    onChange: syncImportModalState
+  });
+  nodes.importSelectionList.classList.remove("selection-tree--empty");
+  const selectedCount = selectedEnvironmentTotal(groups, importSelectionState);
+  nodes.importModalConfirm.disabled = selectedCount === 0;
+  nodes.importModalConfirm.textContent = t("importSelectedCount", [String(selectedCount)]);
+}
+
+function openImportModal() {
+  nodes.importConfig.value = "";
+  resetImportPreview();
+  setModalOpen("import", true);
+}
+
+function closeImportModal() {
+  setModalOpen("import", false);
+}
+
+async function readImportFile(file) {
+  if (!file) return;
+  try {
+    const parsed = decodeImportedSettings(JSON.parse(await file.text()));
+    importPreviewSettings = normalizeSettings(parsed);
+    importSelectionState = createSelectionState(groupedEnvironments(importPreviewSettings));
+    nodes.importDropzoneDetail.textContent = file.name;
+    syncImportModalState();
+  } catch (error) {
+    resetImportPreview();
+    setStatus(error.message, true);
+  }
 }
 
 function confirmDiscardUnsavedChanges() {
@@ -326,6 +646,16 @@ function clearAccountDropIndicators() {
   });
 }
 
+function clearEnvironmentDropIndicators() {
+  if (!nodes.list) return;
+  nodes.list.querySelectorAll(".environment-group").forEach((group) => {
+    group.classList.remove("is-drop-target");
+  });
+  nodes.list.querySelectorAll(".environment-item").forEach((item) => {
+    item.classList.remove("is-drag-source");
+  });
+}
+
 function setAccountDropIndicator(targetRow, placement) {
   if (!nodes.accounts) return;
   nodes.accounts.querySelectorAll(".row-card.account").forEach((row) => {
@@ -346,6 +676,20 @@ function reorderAccounts(environment, sourceId, targetId, placement) {
   const insertIndex = placement === "after" ? adjustedTargetIndex + 1 : adjustedTargetIndex;
   accounts.splice(insertIndex, 0, movedAccount);
   return true;
+}
+
+function moveEnvironmentToGroup(environmentId, groupId) {
+  const environment = settings.environments.find((item) => item.id === environmentId);
+  if (!environment || environment.groupId === groupId) return false;
+  environment.groupId = ensureGroupId(groupId, settings.groups);
+  return true;
+}
+
+function findEnvironmentByPrefixRule(prefixValue) {
+  if (!prefixValue) return null;
+  return settings.environments.find((environment) =>
+    (environment.rules || []).some((rule) => rule.type === "prefix" && rule.value === prefixValue)
+  ) || null;
 }
 
 function accountHasInput(account) {
@@ -514,6 +858,80 @@ function slug(value) {
     .replace(/^-+|-+$/g, "");
 }
 
+function buildLocalizedSampleGroup() {
+  const groupId = SAMPLE_GROUP_ID;
+  const groupName = t("sampleGroupName");
+  const prodName = t("sampleEnvironmentProd");
+  const devName = t("sampleEnvironmentDev");
+
+  return {
+    group: { id: groupId, name: groupName },
+    environments: [
+      {
+        id: uid("env"),
+        groupId,
+        name: prodName,
+        enabled: true,
+        badge: "PROD",
+        badgeEnabled: true,
+        badgeColor: "#dc2626",
+        badgeTextColor: "#ffffff",
+        badgeStyle: "slanted",
+        badgePosition: "top-right",
+        badgeScale: 1,
+        badgeSize: 14,
+        badgeOffset: 12,
+        badgeOpacity: 1,
+        watermarkText: prodName,
+        watermarkEnabled: true,
+        watermarkColor: "#dc2626",
+        watermarkOpacity: 0.08,
+        watermarkAngle: -24,
+        watermarkSize: 42,
+        watermarkGap: 80,
+        titlePrefix: true,
+        markerMode: "badge-watermark",
+        rules: [{ type: "wildcard", value: "https://prod.example.com/*" }],
+        accounts: []
+      },
+      {
+        id: uid("env"),
+        groupId,
+        name: devName,
+        enabled: true,
+        badge: "DEV",
+        badgeEnabled: true,
+        badgeColor: "#2563eb",
+        badgeTextColor: "#ffffff",
+        badgeStyle: "slanted",
+        badgePosition: "top-right",
+        badgeScale: 1,
+        badgeSize: 14,
+        badgeOffset: 12,
+        badgeOpacity: 1,
+        watermarkText: devName,
+        watermarkEnabled: false,
+        watermarkColor: "#2563eb",
+        watermarkOpacity: 0.08,
+        watermarkAngle: -24,
+        watermarkSize: 42,
+        watermarkGap: 80,
+        titlePrefix: true,
+        markerMode: "badge",
+        rules: [{ type: "wildcard", value: "https://dev.example.com/*" }],
+        accounts: []
+      }
+    ]
+  };
+}
+
+function findSampleGroup() {
+  const group = settings.groups.find((item) => item.id === SAMPLE_GROUP_ID);
+  if (!group) return null;
+  const environments = settings.environments.filter((environment) => environment.groupId === SAMPLE_GROUP_ID);
+  return { group, environments };
+}
+
 function buildGroups(rawGroups, rawEnvironments) {
   const groups = [];
   const nameToId = new Map();
@@ -674,6 +1092,38 @@ function markChanged() {
   }
 }
 
+function buildQuickEnvironment(title, prefixValue) {
+  const color = pickEnvironmentColor();
+  const name = String(title || "").trim() || t("newEnvironment");
+  return {
+    id: uid("env"),
+    groupId: DEFAULT_GROUP_ID,
+    name,
+    enabled: true,
+    badge: name,
+    badgeEnabled: true,
+    badgeColor: color,
+    badgeTextColor: "#ffffff",
+    badgeStyle: "slanted",
+    badgePosition: "top-right",
+    badgeScale: 1,
+    badgeSize: 14,
+    badgeOffset: 12,
+    badgeOpacity: 1,
+    watermarkText: name,
+    watermarkEnabled: false,
+    watermarkColor: color,
+    watermarkOpacity: 0.08,
+    watermarkAngle: -24,
+    watermarkSize: 42,
+    watermarkGap: 80,
+    titlePrefix: true,
+    markerMode: "badge",
+    rules: [{ type: "prefix", value: prefixValue }],
+    accounts: []
+  };
+}
+
 function renderGroupOptions() {
   const environment = selectedEnvironment();
   nodes.group.innerHTML = "";
@@ -717,6 +1167,7 @@ function renderEnvironmentList() {
     const wrap = document.createElement("section");
     wrap.className = "environment-group";
     wrap.classList.toggle("is-active", group.id === selectedGroupId);
+    wrap.dataset.groupId = group.id;
 
     const header = document.createElement("div");
     header.className = "environment-group__title";
@@ -777,6 +1228,42 @@ function renderEnvironmentList() {
 
     const stack = document.createElement("div");
     stack.className = "environment-group__list";
+
+    const acceptEnvironmentDrop = async (event) => {
+      if (!draggingEnvironmentId) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const movedEnvironmentId = draggingEnvironmentId;
+      const didMove = moveEnvironmentToGroup(movedEnvironmentId, group.id);
+      draggingEnvironmentId = "";
+      clearEnvironmentDropIndicators();
+      if (!didMove) return;
+      selectedGroupId = group.id;
+      selectedId = movedEnvironmentId;
+      await persistSettingsSnapshot();
+      render();
+      setStatus(t("saved"));
+    };
+
+    wrap.addEventListener("dragover", (event) => {
+      if (!draggingEnvironmentId) return;
+      const draggedEnvironment = settings.environments.find((environment) => environment.id === draggingEnvironmentId);
+      if (!draggedEnvironment || draggedEnvironment.groupId === group.id) return;
+      event.preventDefault();
+      if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+      clearEnvironmentDropIndicators();
+      wrap.classList.add("is-drop-target");
+    });
+
+    wrap.addEventListener("dragleave", (event) => {
+      if (!draggingEnvironmentId) return;
+      if (wrap.contains(event.relatedTarget)) return;
+      wrap.classList.remove("is-drop-target");
+    });
+
+    wrap.addEventListener("drop", acceptEnvironmentDrop);
+    stack.addEventListener("drop", acceptEnvironmentDrop);
+
     const groupEnvironments = settings.environments.filter((environment) => environment.groupId === group.id);
 
     if (!groupEnvironments.length) {
@@ -789,6 +1276,7 @@ function renderEnvironmentList() {
         const button = document.createElement("button");
         button.type = "button";
         button.className = "environment-item";
+        button.draggable = true;
         button.classList.toggle("is-active", environment.id === selectedId);
         button.classList.toggle("is-disabled", environment.enabled === false);
         button.style.setProperty("--item-color", environment.badgeColor || "#2563eb");
@@ -818,6 +1306,19 @@ function renderEnvironmentList() {
 
         button.append(name, meta);
         button.addEventListener("click", () => selectEnvironment(group.id, environment.id));
+        button.addEventListener("dragstart", (event) => {
+          draggingEnvironmentId = environment.id;
+          clearEnvironmentDropIndicators();
+          button.classList.add("is-drag-source");
+          if (event.dataTransfer) {
+            event.dataTransfer.effectAllowed = "move";
+            event.dataTransfer.setData("text/plain", environment.id);
+          }
+        });
+        button.addEventListener("dragend", () => {
+          draggingEnvironmentId = "";
+          clearEnvironmentDropIndicators();
+        });
         stack.append(button);
       });
     }
@@ -1060,7 +1561,7 @@ function renderPreviewBadge(surface, label, environment) {
   surface.append(badge);
 }
 
-function buildPreviewCanvas(environment, label) {
+function buildPreviewCanvas(environment, label, previewType) {
   const canvas = document.createElement("div");
   canvas.className = "marker-preview__canvas";
 
@@ -1075,10 +1576,13 @@ function buildPreviewCanvas(environment, label) {
   title.textContent = environment.titlePrefix ? `[${label}] Example Console` : "Example Console";
   const meta = document.createElement("div");
   meta.className = "marker-preview__meta";
-  const previewParts = [];
-  if (environment.badgeEnabled !== false) previewParts.push(t("badgeConfig"));
-  if (environment.watermarkEnabled === true) previewParts.push(t("watermarkConfig"));
-  meta.textContent = previewParts.join(" · ") || t("marker");
+  if (previewType === "badge") {
+    meta.textContent = environment.badgeEnabled !== false ? t("badgeConfig") : "";
+  } else if (previewType === "watermark") {
+    meta.textContent = environment.watermarkEnabled === true ? t("watermarkConfig") : "";
+  } else {
+    meta.textContent = "";
+  }
   header.append(title, meta);
 
   const body = document.createElement("div");
@@ -1106,13 +1610,13 @@ function renderMarkerPreviews() {
 
   const label = markerLabel(environment);
   const watermarkText = watermarkLabel(environment);
-  const badgeCanvas = buildPreviewCanvas(environment, label);
+  const badgeCanvas = buildPreviewCanvas(environment, label, "badge");
   if (environment.badgeEnabled !== false) {
     renderPreviewBadge(badgeCanvas, label, environment);
   }
   nodes.badgePreviewSurface.append(badgeCanvas);
 
-  const watermarkCanvas = buildPreviewCanvas(environment, label);
+  const watermarkCanvas = buildPreviewCanvas(environment, label, "watermark");
   if (environment.watermarkEnabled === true) {
     renderPreviewWatermark(watermarkCanvas, watermarkText, environment);
   }
@@ -1123,6 +1627,9 @@ function renderForm() {
   const environment = selectedEnvironment();
   const hasEnvironment = Boolean(environment);
   nodes.form.hidden = !hasEnvironment;
+  if (nodes.toolbox) {
+    nodes.toolbox.hidden = !hasEnvironment;
+  }
   nodes.deleteEnvironment.disabled = !hasEnvironment;
   nodes.addRule.disabled = !hasEnvironment;
   nodes.addAccount.disabled = !hasEnvironment;
@@ -1202,10 +1709,7 @@ async function setSelectedEnvironmentEnabled(enabled) {
   if (!environment) return;
   environment.enabled = enabled;
   renderEnvironmentList();
-  await chrome.storage.local.set({ [STORAGE_KEY]: settings });
-  savedSettingsSnapshot = clone(settings);
-  hasUnsavedChanges = false;
-  syncSaveButtonState();
+  await persistSettingsSnapshot();
   syncEnabledLabel();
   setStatus(t("saved"));
 }
@@ -1240,7 +1744,7 @@ function renameGroup(groupId) {
   markChanged();
 }
 
-function deleteGroup(groupId) {
+async function deleteGroup(groupId) {
   const group = settings.groups.find((item) => item.id === groupId);
   if (!group || group.id === DEFAULT_GROUP_ID) return;
   if (!window.confirm(t("confirmDeleteGroup", [group.name, defaultGroupName()]))) return;
@@ -1252,8 +1756,9 @@ function deleteGroup(groupId) {
   if (selectedEnvironment()?.groupId === groupId) {
     selectedId = settings.environments.find((environment) => environment.groupId === DEFAULT_GROUP_ID)?.id || null;
   }
+  await persistSettingsSnapshot();
   render();
-  markChanged();
+  setStatus(t("saved"));
 }
 
 function addEnvironment(groupId = selectedGroupId || DEFAULT_GROUP_ID) {
@@ -1312,7 +1817,7 @@ function duplicateEnvironment(groupId) {
   markChanged();
 }
 
-function deleteEnvironment() {
+async function deleteEnvironment() {
   const environment = selectedEnvironment();
   if (!environment) return;
   const name = typeof environment.name === "string" && environment.name.trim() ? environment.name.trim() : t("environmentFallback");
@@ -1321,8 +1826,9 @@ function deleteEnvironment() {
   settings.environments = settings.environments.filter((item) => item.id !== environment.id);
   selectedGroupId = currentGroupId;
   selectedId = settings.environments.find((item) => item.groupId === currentGroupId)?.id || null;
+  await persistSettingsSnapshot();
   render();
-  markChanged();
+  setStatus(t("saved"));
 }
 
 async function saveSettings() {
@@ -1335,23 +1841,22 @@ async function saveSettings() {
     return;
   }
   settings = normalizeSettings(settings);
-  await chrome.storage.local.set({ [STORAGE_KEY]: settings });
-  savedSettingsSnapshot = clone(settings);
-  hasUnsavedChanges = false;
-  syncSaveButtonState();
+  await persistSettingsSnapshot();
   clearAccountsValidationError();
   render();
   setStatus(t("saved"));
 }
 
 function exportSettings() {
-  const blob = new Blob([JSON.stringify(buildExportSettings(), null, 2)], { type: "application/json" });
+  const exportSettingsSubset = buildSelectedSettings(settings, exportSelectionState);
+  const blob = new Blob([JSON.stringify(buildExportSettings(exportSettingsSubset), null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
   link.download = "envmate-config.json";
   link.click();
   URL.revokeObjectURL(url);
+  closeExportModal();
   setStatus(t("exported"));
 }
 
@@ -1367,6 +1872,37 @@ function applySettings(nextSettings, message) {
   render();
   syncSaveButtonState();
   setStatus(message);
+}
+
+async function handleQuickAddFromQuery() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get("quickAdd") !== "1") return;
+
+  const title = String(params.get("title") || "").trim();
+  const prefixValue = String(params.get("prefix") || "").trim();
+  if (!prefixValue) {
+    window.history.replaceState({}, document.title, window.location.pathname);
+    return;
+  }
+
+  const existingEnvironment = findEnvironmentByPrefixRule(prefixValue);
+  if (existingEnvironment) {
+    selectedGroupId = existingEnvironment.groupId || DEFAULT_GROUP_ID;
+    selectedId = existingEnvironment.id;
+    render();
+    setStatus(t("quickAddEnvironmentExists"));
+    window.history.replaceState({}, document.title, window.location.pathname);
+    return;
+  }
+
+  const environment = buildQuickEnvironment(title, prefixValue);
+  settings.environments.push(environment);
+  selectedGroupId = DEFAULT_GROUP_ID;
+  selectedId = environment.id;
+  await persistSettingsSnapshot();
+  render();
+  setStatus(t("quickAddEnvironmentCreated"));
+  window.history.replaceState({}, document.title, window.location.pathname);
 }
 
 bindNodeEvent(nodes.name, "input", () => {
@@ -1482,6 +2018,12 @@ window.addEventListener(
 );
 
 window.addEventListener("resize", positionToolbox, { passive: true });
+window.addEventListener("keydown", (event) => {
+  if (event.key !== "Escape") return;
+  if (activeModalName === "export") closeExportModal();
+  if (activeModalName === "import") closeImportModal();
+  if (activeModalName === "about") closeAboutModal();
+});
 
 window.addEventListener("beforeunload", (event) => {
   if (!hasUnsavedChanges) return;
@@ -1509,27 +2051,90 @@ bindNodeEvent(nodes.addAccount, "click", () => {
 bindNodeEvent(nodes.addGroup, "click", addGroup);
 bindNodeEvent(nodes.deleteEnvironment, "click", deleteEnvironment);
 bindNodeEvent(nodes.save, "click", saveSettings);
-bindNodeEvent(nodes.exportConfig, "click", exportSettings);
+bindNodeEvent(nodes.localeSwitcher, "change", async () => {
+  await handleLocaleChange(nodes.localeSwitcher.value);
+});
+bindNodeEvent(nodes.exportConfig, "click", openExportModal);
+bindNodeEvent(nodes.aboutTrigger, "click", openAboutModal);
+bindNodeEvent(nodes.exportModalClose, "click", closeExportModal);
+bindNodeEvent(nodes.exportModalCancel, "click", closeExportModal);
+bindNodeEvent(nodes.exportModalConfirm, "click", exportSettings);
 
+bindNodeEvent(nodes.importConfigTrigger, "click", openImportModal);
+bindNodeEvent(nodes.importModalClose, "click", closeImportModal);
+bindNodeEvent(nodes.importModalCancel, "click", closeImportModal);
+bindNodeEvent(nodes.importDropzone, "click", () => nodes.importConfig.click());
 bindNodeEvent(nodes.importConfig, "change", async () => {
   const file = nodes.importConfig.files?.[0];
   if (!file) return;
-  try {
-    applySettings(decodeImportedSettings(JSON.parse(await file.text())), t("importedSaveToApply"));
-  } catch (error) {
-    setStatus(error.message, true);
-  } finally {
-    nodes.importConfig.value = "";
-  }
+  await readImportFile(file);
+  nodes.importConfig.value = "";
+});
+bindNodeEvent(nodes.importDropzone, "dragover", (event) => {
+  event.preventDefault();
+  nodes.importDropzone.classList.add("is-dragover");
+});
+bindNodeEvent(nodes.importDropzone, "dragleave", () => {
+  nodes.importDropzone.classList.remove("is-dragover");
+});
+bindNodeEvent(nodes.importDropzone, "drop", async (event) => {
+  event.preventDefault();
+  nodes.importDropzone.classList.remove("is-dragover");
+  const file = event.dataTransfer?.files?.[0];
+  await readImportFile(file);
+});
+bindNodeEvent(nodes.importModalConfirm, "click", async () => {
+  if (!importPreviewSettings || !importSelectionState) return;
+  const selectedImportSettings = buildSelectedSettings(importPreviewSettings, importSelectionState);
+  const merged = mergeImportedSettings(settings, selectedImportSettings);
+  clearAccountsValidationError();
+  settings = normalizeSettings(merged);
+  selectedGroupId = settings.groups[0]?.id || DEFAULT_GROUP_ID;
+  selectedId = settings.environments.find((environment) => environment.groupId === selectedGroupId)?.id || settings.environments[0]?.id || null;
+  await persistSettingsSnapshot();
+  render();
+  setStatus(t("importedApplied"));
+  closeImportModal();
+});
+bindNodeEvent(nodes.aboutModalClose, "click", closeAboutModal);
+bindNodeEvent(nodes.aboutModalConfirm, "click", closeAboutModal);
+bindNodeEvent(nodes.modalBackdrop, "click", () => {
+  if (activeModalName === "export") closeExportModal();
+  if (activeModalName === "import") closeImportModal();
+  if (activeModalName === "about") closeAboutModal();
 });
 
-bindNodeEvent(nodes.loadSample, "click", () => {
-  applySettings(clone(SAMPLE_SETTINGS), t("sampleLoadedSaveToApply"));
+bindNodeEvent(nodes.loadSample, "click", async () => {
+  let sampleGroup = findSampleGroup();
+  if (!sampleGroup) {
+    const createdSampleGroup = buildLocalizedSampleGroup();
+    settings.groups.push(createdSampleGroup.group);
+    settings.environments.push(...createdSampleGroup.environments);
+    await chrome.storage.local.set({ [STORAGE_KEY]: settings });
+    savedSettingsSnapshot = clone(settings);
+    sampleGroup = createdSampleGroup;
+    setStatus(t("sampleLoaded"));
+  } else {
+    setStatus(t("sampleAlreadyLoaded"));
+  }
+
+  selectedGroupId = sampleGroup.group.id;
+  selectedId = sampleGroup.environments[0]?.id || null;
+  clearAccountsValidationError();
+  hasUnsavedChanges = false;
+  syncSaveButtonState();
+  render();
 });
 
 async function loadSettings() {
+  if (window.envmateI18n?.setLocaleChoice && window.envmateI18n?.getLocaleChoice) {
+    await window.envmateI18n.setLocaleChoice(window.envmateI18n.getLocaleChoice(), { persist: false });
+  }
+  syncLocaleSwitcher();
+  syncAboutModalState();
   const result = await chrome.storage.local.get([STORAGE_KEY]);
-  applySettings(result[STORAGE_KEY] || SAMPLE_SETTINGS, t("ready"));
+  applySettings(result[STORAGE_KEY] || createSampleSettings(), t("ready"));
+  await handleQuickAddFromQuery();
 }
 
 loadSettings();

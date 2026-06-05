@@ -4,6 +4,12 @@
   "description": "__MSG_extDescription__",
   "version": "0.1.0",
   "default_locale": "en",
+  "icons": {
+    "16": "assets/icons/icon-16.png",
+    "32": "assets/icons/icon-32.png",
+    "48": "assets/icons/icon-48.png",
+    "128": "assets/icons/icon-128-display.png"
+  },
   "permissions": ["storage", "tabs"],
   "host_permissions": ["<all_urls>"],
   "background": {
@@ -18,6 +24,12 @@
     }
   ],
   "action": {
+    "default_icon": {
+      "16": "assets/icons/icon-16.png",
+      "32": "assets/icons/icon-32.png",
+      "48": "assets/icons/icon-48.png",
+      "128": "assets/icons/icon-128-display.png"
+    },
     "default_title": "__MSG_extName__",
     "default_popup": "popup/popup.html"
   },
