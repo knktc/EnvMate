@@ -10,6 +10,7 @@ const environmentEnabledNode = document.querySelector("#environment-enabled");
 const accountsSectionNode = document.querySelector("#accounts-section");
 const accountsNode = document.querySelector("#accounts");
 const openOptionsButton = document.querySelector("#open-options");
+const quickAddEnvironmentNode = document.querySelector("#quick-add-environment");
 const t = window.envmateI18n.t;
 const DEFAULT_VISIBLE_ACCOUNTS = 3;
 
@@ -34,11 +35,33 @@ function matchesRule(url, rule) {
   }
 }
 
+function ruleSpecificity(rule) {
+  if (!rule?.value) return -1;
+  if (rule.type === "prefix") return 3000 + rule.value.length;
+  if (rule.type === "wildcard") return 2000 + rule.value.replace(/\*/g, "").length;
+  if (rule.type === "regex") return 1000 + rule.value.length;
+  return rule.value.length;
+}
+
 function findEnvironment(config, url, includeDisabled = false) {
-  return (config.environments || []).find((environment) => {
-    if (!includeDisabled && environment.enabled === false) return false;
-    return (environment.rules || []).some((rule) => matchesRule(url, rule));
+  let matchedEnvironment = null;
+  let highestSpecificity = -1;
+
+  (config.environments || []).forEach((environment) => {
+    if (!includeDisabled && environment.enabled === false) return;
+    const environmentSpecificity = Math.max(
+      ...((environment.rules || [])
+        .filter((rule) => matchesRule(url, rule))
+        .map((rule) => ruleSpecificity(rule))),
+      -1
+    );
+    if (environmentSpecificity > highestSpecificity) {
+      matchedEnvironment = environment;
+      highestSpecificity = environmentSpecificity;
+    }
   });
+
+  return matchedEnvironment;
 }
 
 function findGroupName(config, environment) {
@@ -101,9 +124,40 @@ function setEmpty(node, text) {
   node.append(empty);
 }
 
+function buildSuggestedPrefix(url) {
+  if (!url) return "";
+  try {
+    const parsed = new URL(url);
+    if (!["http:", "https:"].includes(parsed.protocol)) return "";
+    return `${parsed.origin}/`;
+  } catch (_) {
+    return "";
+  }
+}
+
+async function openQuickAddEnvironment() {
+  const sourceUrl = currentTab?.url || "";
+  const urlPrefix = buildSuggestedPrefix(sourceUrl);
+  if (!urlPrefix) return;
+  const title = String(currentTab?.title || "").trim() || t("newEnvironment");
+  const params = new URLSearchParams({
+    source: "popup",
+    quickAdd: "1",
+    title,
+    prefix: urlPrefix,
+    url: sourceUrl
+  });
+  await chrome.tabs.create({
+    url: `${chrome.runtime.getURL("options/options.html")}?${params.toString()}`
+  });
+  window.close();
+}
+
 function renderEnvironment() {
   const url = currentTab?.url || "";
+  const suggestedPrefix = buildSuggestedPrefix(url);
   currentUrlNode.textContent = url || t("noActiveTab");
+  quickAddEnvironmentNode.hidden = true;
   currentEnvironment = settings ? findEnvironment(settings, url, true) : null;
 
   if (!currentEnvironment) {
@@ -113,7 +167,8 @@ function renderEnvironment() {
     environmentToggleNode.hidden = true;
     accountsSectionNode.hidden = true;
     environmentNameNode.textContent = t("noMatch");
-    environmentMetaNode.textContent = t("addRuleForUrl");
+    environmentMetaNode.textContent = "";
+    quickAddEnvironmentNode.hidden = !suggestedPrefix;
     return;
   }
 
@@ -197,5 +252,7 @@ environmentEnabledNode.addEventListener("change", async () => {
 openOptionsButton.addEventListener("click", () => {
   chrome.runtime.openOptionsPage();
 });
+
+quickAddEnvironmentNode.addEventListener("click", openQuickAddEnvironment);
 
 init();

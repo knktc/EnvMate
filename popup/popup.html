@@ -9,9 +9,12 @@
   <body>
     <main class="popup">
       <header class="header">
-        <div>
-          <h1 data-i18n="extName">EnvMate</h1>
-          <p id="current-url" data-i18n="loadingCurrentTab">Loading current tab...</p>
+        <div class="header__brand">
+          <img class="header__logo" src="../assets/icons/icon-48.png" alt="EnvMate logo" />
+          <div>
+            <h1 data-i18n="extName">EnvMate</h1>
+            <p id="current-url" data-i18n="loadingCurrentTab">Loading current tab...</p>
+          </div>
         </div>
         <button id="open-options" class="icon-button" type="button" title="Open settings" data-i18n-title="openSettings">⚙</button>
       </header>
@@ -26,6 +29,9 @@
         </div>
         <div id="environment-name" class="environment-card__name" data-i18n="checking">Checking...</div>
         <div id="environment-meta" class="environment-card__meta"></div>
+        <button id="quick-add-environment" class="quick-action-button environment-card__action" type="button" hidden data-i18n="quickAddCurrentPage">
+          Add Current Site
+        </button>
       </section>
 
       <section id="accounts-section" class="section">

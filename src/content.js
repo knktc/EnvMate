@@ -30,11 +30,33 @@
     }
   }
 
+  function ruleSpecificity(rule) {
+    if (!rule?.value) return -1;
+    if (rule.type === "prefix") return 3000 + rule.value.length;
+    if (rule.type === "wildcard") return 2000 + rule.value.replace(/\*/g, "").length;
+    if (rule.type === "regex") return 1000 + rule.value.length;
+    return rule.value.length;
+  }
+
   function findEnvironment(settings, url) {
-    return (settings.environments || []).find((environment) => {
-      if (environment.enabled === false) return false;
-      return (environment.rules || []).some((rule) => matchesRule(url, rule));
+    let matchedEnvironment = null;
+    let highestSpecificity = -1;
+
+    (settings.environments || []).forEach((environment) => {
+      if (environment.enabled === false) return;
+      const environmentSpecificity = Math.max(
+        ...((environment.rules || [])
+          .filter((rule) => matchesRule(url, rule))
+          .map((rule) => ruleSpecificity(rule))),
+        -1
+      );
+      if (environmentSpecificity > highestSpecificity) {
+        matchedEnvironment = environment;
+        highestSpecificity = environmentSpecificity;
+      }
     });
+
+    return matchedEnvironment;
   }
 
   function removeMarkers() {
