@@ -109,6 +109,7 @@
   "noAccountsHint": { "message": "No accounts. Add test accounts for one-click filling." },
   "emptyAccountError": { "message": "A test account has no information. Fill in a purpose, username, or password, or delete the empty account." },
   "dragToReorder": { "message": "Drag to reorder" },
+  "invalidImportedPassword": { "message": "Import failed: passwords in this config are not in the current EnvMate import format." },
   "removeRule": { "message": "Remove rule" },
   "removeAccount": { "message": "Remove account" },
   "currentEnvironment": { "message": "Current environment" },

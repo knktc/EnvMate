@@ -107,6 +107,7 @@
   "noAccountsHint": { "message": "还没有账号。添加测试账号后，可以一键填充。" },
   "emptyAccountError": { "message": "测试账号未填写信息。请填写用途、用户名或密码，或者删除这条空账号。" },
   "dragToReorder": { "message": "拖动调整顺序" },
+  "invalidImportedPassword": { "message": "导入失败：配置里的密码不是 EnvMate 当前支持的导入格式。" },
   "removeRule": { "message": "删除规则" },
   "removeAccount": { "message": "删除账号" },
   "currentEnvironment": { "message": "当前环境" },
