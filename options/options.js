@@ -64,6 +64,16 @@ const LUCIDE_ICON_NODES = {
     ["path", { d: "M18 6 6 18" }],
     ["path", { d: "m6 6 12 12" }]
   ],
+  eye: [
+    ["path", { d: "M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0" }],
+    ["circle", { cx: "12", cy: "12", r: "3" }]
+  ],
+  eyeOff: [
+    ["path", { d: "M10.733 5.076A10.744 10.744 0 0 1 12 5c4.642 0 8.73 2.965 9.938 7a10.523 10.523 0 0 1-1.441 2.497" }],
+    ["path", { d: "M14.084 14.158a3 3 0 0 1-4.242-4.242" }],
+    ["path", { d: "M17.479 17.499A10.75 10.75 0 0 1 12 19c-4.642 0-8.73-2.965-9.938-7a10.523 10.523 0 0 1 4.446-5.143" }],
+    ["path", { d: "m2 2 20 20" }]
+  ],
   power: [
     ["path", { d: "M12 2v10" }],
     ["path", { d: "M18.4 6.6a9 9 0 1 1-12.8 0" }]
@@ -959,7 +969,22 @@ function buildLocalizedSampleGroup() {
         titlePrefix: true,
         markerMode: "badge-watermark",
         rules: [{ type: "wildcard", value: "https://prod.example.com/*" }],
-        accounts: []
+        accounts: [
+          {
+            id: uid("account"),
+            label: "管理员",
+            username: "prod_admin",
+            password: "Prod@123456",
+            defaultFill: true
+          },
+          {
+            id: uid("account"),
+            label: "测试账号",
+            username: "prod_tester",
+            password: "Prod@Test123",
+            defaultFill: false
+          }
+        ]
       },
       {
         id: uid("env"),
@@ -986,7 +1011,22 @@ function buildLocalizedSampleGroup() {
         titlePrefix: true,
         markerMode: "badge",
         rules: [{ type: "wildcard", value: "https://dev.example.com/*" }],
-        accounts: []
+        accounts: [
+          {
+            id: uid("account"),
+            label: "开发管理员",
+            username: "dev_admin",
+            password: "Dev@123456",
+            defaultFill: true
+          },
+          {
+            id: uid("account"),
+            label: "联调账号",
+            username: "dev_tester",
+            password: "Dev@Test123",
+            defaultFill: false
+          }
+        ]
       }
     ]
   };
@@ -997,6 +1037,20 @@ function findSampleGroup() {
   if (!group) return null;
   const environments = settings.environments.filter((environment) => environment.groupId === SAMPLE_GROUP_ID);
   return { group, environments };
+}
+
+function applyLocalizedSampleGroup() {
+  const sampleGroup = buildLocalizedSampleGroup();
+  const existingGroupIndex = settings.groups.findIndex((group) => group.id === SAMPLE_GROUP_ID);
+  if (existingGroupIndex >= 0) {
+    settings.groups[existingGroupIndex] = sampleGroup.group;
+  } else {
+    settings.groups.push(sampleGroup.group);
+  }
+
+  settings.environments = settings.environments.filter((environment) => environment.groupId !== SAMPLE_GROUP_ID);
+  settings.environments.push(...sampleGroup.environments);
+  return sampleGroup;
 }
 
 function buildGroups(rawGroups, rawEnvironments) {
@@ -1194,15 +1248,109 @@ function markChanged() {
   }
 }
 
-function buildQuickEnvironment(title, prefixValue) {
+const QUICK_BADGE_LABELS = new Map([
+  ["local", "LOCAL"],
+  ["dev", "DEV"],
+  ["develop", "DEV"],
+  ["development", "DEV"],
+  ["test", "TEST"],
+  ["testing", "TEST"],
+  ["qa", "QA"],
+  ["sit", "SIT"],
+  ["uat", "UAT"],
+  ["stage", "STAGE"],
+  ["staging", "STAGE"],
+  ["pre", "PRE"],
+  ["preprod", "PRE"],
+  ["pre-release", "PRE"],
+  ["preview", "PREVIEW"],
+  ["beta", "BETA"],
+  ["demo", "DEMO"],
+  ["sandbox", "SANDBOX"],
+  ["gray", "GRAY"],
+  ["canary", "CANARY"],
+  ["perf", "PERF"],
+  ["performance", "PERF"],
+  ["prod", "PROD"],
+  ["production", "PROD"],
+  ["online", "PROD"]
+]);
+
+function tokenizeQuickBadgeSource(value) {
+  return String(value || "")
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .map((token) => token.trim())
+    .filter(Boolean);
+}
+
+function detectQuickBadge(url, title) {
+  const tryKnownLabel = (tokens) => {
+    for (const token of tokens) {
+      const label = QUICK_BADGE_LABELS.get(token);
+      if (label) return label;
+    }
+    return "";
+  };
+
+  try {
+    const parsed = new URL(url);
+    const hostTokens = tokenizeQuickBadgeSource(parsed.hostname);
+    const pathTokens = tokenizeQuickBadgeSource(`${parsed.pathname} ${parsed.search}`);
+    const titleTokens = tokenizeQuickBadgeSource(title);
+    const matchedKnownLabel = tryKnownLabel([...hostTokens, ...pathTokens, ...titleTokens]);
+    if (matchedKnownLabel) return matchedKnownLabel;
+
+    const hostParts = parsed.hostname.split(".").filter(Boolean);
+    const subdomainParts = hostParts.length > 2 ? hostParts.slice(0, -2) : hostParts.slice(0, -1);
+    const fallbackLabel = subdomainParts
+      .flatMap((part) => tokenizeQuickBadgeSource(part))
+      .find((token) => token && !["www", "m"].includes(token));
+    if (fallbackLabel) return fallbackLabel.slice(0, 12).toUpperCase();
+
+    const hostFallback = tokenizeQuickBadgeSource(parsed.hostname).find((token) => token && !["www", "m"].includes(token));
+    if (hostFallback) return hostFallback.slice(0, 12).toUpperCase();
+  } catch (_) {
+    const titleFallback = tryKnownLabel(tokenizeQuickBadgeSource(title));
+    if (titleFallback) return titleFallback;
+  }
+
+  return "ENV";
+}
+
+function buildQuickEnvironmentName(title, sourceUrl, badge) {
+  const cleanTitle = String(title || "").trim();
+  try {
+    const parsed = new URL(sourceUrl);
+    const host = parsed.hostname;
+    if (!cleanTitle) return host || t("newEnvironment");
+    const normalizedTitle = cleanTitle.toLowerCase();
+    if (host && !normalizedTitle.includes(host.toLowerCase())) {
+      return `${cleanTitle} (${host})`;
+    }
+    if (badge && !normalizedTitle.includes(badge.toLowerCase())) {
+      return `${cleanTitle} (${badge})`;
+    }
+    return cleanTitle;
+  } catch (_) {
+    if (!cleanTitle) return t("newEnvironment");
+    if (badge && !cleanTitle.toLowerCase().includes(badge.toLowerCase())) {
+      return `${cleanTitle} (${badge})`;
+    }
+    return cleanTitle;
+  }
+}
+
+function buildQuickEnvironment(title, prefixValue, sourceUrl = "") {
   const color = pickEnvironmentColor();
-  const name = String(title || "").trim() || t("newEnvironment");
+  const badge = detectQuickBadge(sourceUrl || prefixValue, title);
+  const name = buildQuickEnvironmentName(title, sourceUrl || prefixValue, badge);
   return {
     id: uid("env"),
     groupId: DEFAULT_GROUP_ID,
     name,
     enabled: true,
-    badge: name,
+    badge,
     badgeEnabled: true,
     badgeColor: color,
     badgeTextColor: "#ffffff",
@@ -1262,6 +1410,24 @@ function renderColorSwatches(node, colors, value, onSelect) {
     button.title = color;
     button.addEventListener("click", () => onSelect(color));
     node.append(button);
+  });
+}
+
+function syncColorControls(environment = selectedEnvironment()) {
+  if (!environment) return;
+
+  nodes.badgeColor.value = environment.badgeColor;
+  nodes.badgeTextColor.value = environment.badgeTextColor;
+  nodes.watermarkColor.value = environment.watermarkColor;
+
+  renderColorSwatches(nodes.badgeColorSwatches, ENVIRONMENT_COLOR_PRESETS, environment.badgeColor, (color) => {
+    updateSelectedEnvironment({ badgeColor: color });
+  });
+  renderColorSwatches(nodes.badgeTextColorSwatches, TEXT_COLOR_PRESETS, environment.badgeTextColor, (color) => {
+    updateSelectedEnvironment({ badgeTextColor: color });
+  });
+  renderColorSwatches(nodes.watermarkColorSwatches, ENVIRONMENT_COLOR_PRESETS, environment.watermarkColor, (color) => {
+    updateSelectedEnvironment({ watermarkColor: color });
   });
 }
 
@@ -1519,6 +1685,16 @@ function createAccountRow(account, index) {
   password.placeholder = t("passwordPlaceholder");
   password.value = account.password || "";
 
+  const passwordWrap = document.createElement("div");
+  passwordWrap.className = "password-field";
+  const togglePassword = document.createElement("button");
+  togglePassword.type = "button";
+  togglePassword.className = "password-toggle";
+  togglePassword.title = t("showPassword");
+  togglePassword.setAttribute("aria-label", t("showPassword"));
+  togglePassword.append(createLucideIcon("eyeOff", "password-toggle__icon"));
+  passwordWrap.append(password, togglePassword);
+
   const label = document.createElement("input");
   label.type = "text";
   label.placeholder = t("accountLabelPlaceholder");
@@ -1592,6 +1768,15 @@ function createAccountRow(account, index) {
   label.addEventListener("input", update);
   username.addEventListener("input", update);
   password.addEventListener("input", update);
+  togglePassword.addEventListener("click", () => {
+    const shouldShowPassword = password.type === "password";
+    password.type = shouldShowPassword ? "text" : "password";
+    const nextTitle = shouldShowPassword ? t("hidePassword") : t("showPassword");
+    togglePassword.title = nextTitle;
+    togglePassword.setAttribute("aria-label", nextTitle);
+    togglePassword.textContent = "";
+    togglePassword.append(createLucideIcon(shouldShowPassword ? "eye" : "eyeOff", "password-toggle__icon"));
+  });
   defaultFill.addEventListener("change", () => {
     const environment = selectedEnvironment();
     if (defaultFill.checked) {
@@ -1613,7 +1798,7 @@ function createAccountRow(account, index) {
     markChanged();
   });
 
-  row.append(dragHandle, username, password, label, defaultWrap, remove);
+  row.append(dragHandle, username, passwordWrap, label, defaultWrap, remove);
   return row;
 }
 
@@ -1768,23 +1953,9 @@ function renderForm() {
   nodes.group.value = ensureGroupId(environment.groupId, settings.groups);
   nodes.badge.value = environment.badge || environment.name || "";
   nodes.badgeEnabled.checked = environment.badgeEnabled !== false;
-  nodes.badgeColor.value = environment.badgeColor;
-  nodes.badgeTextColor.value = environment.badgeTextColor;
   nodes.watermarkEnabled.checked = environment.watermarkEnabled === true;
   nodes.watermarkText.value = watermarkLabel(environment);
-  nodes.watermarkColor.value = environment.watermarkColor;
-  renderColorSwatches(nodes.badgeColorSwatches, ENVIRONMENT_COLOR_PRESETS, environment.badgeColor, (color) => {
-    nodes.badgeColor.value = color;
-    updateSelectedEnvironment({ badgeColor: color });
-  });
-  renderColorSwatches(nodes.badgeTextColorSwatches, TEXT_COLOR_PRESETS, environment.badgeTextColor, (color) => {
-    nodes.badgeTextColor.value = color;
-    updateSelectedEnvironment({ badgeTextColor: color });
-  });
-  renderColorSwatches(nodes.watermarkColorSwatches, ENVIRONMENT_COLOR_PRESETS, environment.watermarkColor, (color) => {
-    nodes.watermarkColor.value = color;
-    updateSelectedEnvironment({ watermarkColor: color });
-  });
+  syncColorControls(environment);
   nodes.enabled.checked = environment.enabled !== false;
   syncEnabledLabel();
   nodes.titlePrefix.checked = environment.titlePrefix;
@@ -1822,6 +1993,9 @@ function updateSelectedEnvironment(patch) {
   Object.assign(environment, patch);
   if (patch.groupId) selectedGroupId = patch.groupId;
   renderEnvironmentList();
+  if ("badgeColor" in patch || "badgeTextColor" in patch || "watermarkColor" in patch) {
+    syncColorControls(environment);
+  }
   renderMarkerPreviews();
   markChanged();
 }
@@ -2002,6 +2176,7 @@ async function handleQuickAddFromQuery() {
 
   const title = String(params.get("title") || "").trim();
   const prefixValue = String(params.get("prefix") || "").trim();
+  const sourceUrl = String(params.get("url") || "").trim();
   if (!prefixValue) {
     window.history.replaceState({}, document.title, window.location.pathname);
     return;
@@ -2017,12 +2192,12 @@ async function handleQuickAddFromQuery() {
     return;
   }
 
-  const environment = buildQuickEnvironment(title, prefixValue);
+  const environment = buildQuickEnvironment(title, prefixValue, sourceUrl);
   settings.environments.push(environment);
   selectedGroupId = DEFAULT_GROUP_ID;
   selectedId = environment.id;
-  await persistSettingsSnapshot();
   render();
+  markChanged();
   setStatus(t("quickAddEnvironmentCreated"));
   window.history.replaceState({}, document.title, window.location.pathname);
 }
@@ -2046,24 +2221,12 @@ bindNodeEvent(nodes.badgeEnabled, "change", () => updateSelectedEnvironment({ ba
 bindNodeEvent(nodes.watermarkText, "input", () => updateSelectedEnvironment({ watermarkText: nodes.watermarkText.value }));
 bindNodeEvent(nodes.badgeColor, "input", () => {
   updateSelectedEnvironment({ badgeColor: nodes.badgeColor.value });
-  renderColorSwatches(nodes.badgeColorSwatches, ENVIRONMENT_COLOR_PRESETS, nodes.badgeColor.value, (color) => {
-    nodes.badgeColor.value = color;
-    updateSelectedEnvironment({ badgeColor: color });
-  });
 });
 bindNodeEvent(nodes.badgeTextColor, "input", () => {
   updateSelectedEnvironment({ badgeTextColor: nodes.badgeTextColor.value });
-  renderColorSwatches(nodes.badgeTextColorSwatches, TEXT_COLOR_PRESETS, nodes.badgeTextColor.value, (color) => {
-    nodes.badgeTextColor.value = color;
-    updateSelectedEnvironment({ badgeTextColor: color });
-  });
 });
 bindNodeEvent(nodes.watermarkColor, "input", () => {
   updateSelectedEnvironment({ watermarkColor: nodes.watermarkColor.value });
-  renderColorSwatches(nodes.watermarkColorSwatches, ENVIRONMENT_COLOR_PRESETS, nodes.watermarkColor.value, (color) => {
-    nodes.watermarkColor.value = color;
-    updateSelectedEnvironment({ watermarkColor: color });
-  });
 });
 bindNodeEvent(nodes.watermarkEnabled, "change", () => updateSelectedEnvironment({ watermarkEnabled: nodes.watermarkEnabled.checked }));
 bindNodeEvent(nodes.enabled, "change", async () => {
@@ -2227,18 +2390,10 @@ bindNodeEvent(nodes.modalBackdrop, "click", () => {
 });
 
 bindNodeEvent(nodes.loadSample, "click", async () => {
-  let sampleGroup = findSampleGroup();
-  if (!sampleGroup) {
-    const createdSampleGroup = buildLocalizedSampleGroup();
-    settings.groups.push(createdSampleGroup.group);
-    settings.environments.push(...createdSampleGroup.environments);
-    await chrome.storage.local.set({ [STORAGE_KEY]: settings });
-    savedSettingsSnapshot = clone(settings);
-    sampleGroup = createdSampleGroup;
-    setStatus(t("sampleLoaded"));
-  } else {
-    setStatus(t("sampleAlreadyLoaded"));
-  }
+  const sampleGroup = applyLocalizedSampleGroup();
+  await chrome.storage.local.set({ [STORAGE_KEY]: settings });
+  savedSettingsSnapshot = clone(settings);
+  setStatus(t("sampleLoaded"));
 
   selectedGroupId = sampleGroup.group.id;
   selectedId = sampleGroup.environments[0]?.id || null;

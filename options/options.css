@@ -47,6 +47,8 @@ body.modal-open {
   display: flex;
   align-items: center;
   gap: 14px;
+  flex: 1 1 auto;
+  min-width: 0;
 }
 
 .hero__logo {
@@ -90,8 +92,25 @@ h2 {
 }
 
 .actions {
+  flex: 0 0 auto;
   flex-wrap: wrap;
   justify-content: flex-end;
+}
+
+.hero__brand > div {
+  min-width: 0;
+}
+
+.actions,
+.button-with-icon,
+.button-label {
+  white-space: nowrap;
+}
+
+@media (min-width: 921px) {
+  .actions {
+    flex-wrap: nowrap;
+  }
 }
 
 .locale-switcher {
@@ -1612,6 +1631,41 @@ textarea:focus {
 
 .row-card.account {
   grid-template-columns: 34px 1fr 1fr 1fr 98px auto;
+}
+
+.password-field {
+  position: relative;
+  min-width: 0;
+}
+
+.password-field input {
+  width: 100%;
+  padding-right: 36px;
+}
+
+.password-toggle {
+  position: absolute;
+  top: 50%;
+  right: 5px;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #64748b;
+  transform: translateY(-50%);
+}
+
+.password-toggle:hover {
+  border: 0;
+  background: transparent;
+  color: #2563eb;
+}
+
+.password-toggle__icon {
+  width: 15px;
+  height: 15px;
+  display: block;
 }
 
 .row-card.account.is-drag-source {
