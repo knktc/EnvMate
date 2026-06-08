@@ -17,6 +17,14 @@ EnvMate is a Chrome extension for development and test teams that work with many
 3. Click `Load unpacked`.
 4. Select this folder: `/Users/knktc/scripts/apps/EnvMate`.
 
+## Release Packaging
+
+- Run `make zip` to create `dist/envmate-<version>.zip` for release distribution.
+- Run `make crx` to pack a `.crx` from the command line with Chrome.
+- Run `make crx KEY=path/to/key.pem` to reuse the same signing key across builds.
+- If you do not pass `KEY`, Chrome will generate a new private key at `.keys/envmate-<version>.pem`, which changes the extension identity.
+- Never commit files in `.keys/`. They are private signing keys, not public release assets.
+
 ## Configuration
 
 Open the extension options page. You can add groups, add environments inside a group, edit colors, choose marker styles, add URL rules, and add test accounts through the form UI.
