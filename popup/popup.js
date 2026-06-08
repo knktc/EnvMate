@@ -13,11 +13,45 @@ const openOptionsButton = document.querySelector("#open-options");
 const quickAddEnvironmentNode = document.querySelector("#quick-add-environment");
 const t = window.envmateI18n.t;
 const DEFAULT_VISIBLE_ACCOUNTS = 3;
+const LUCIDE_ICON_ATTRS = {
+  fill: "none",
+  stroke: "currentColor",
+  "stroke-linecap": "round",
+  "stroke-linejoin": "round",
+  "stroke-width": "2"
+};
 
 let currentTab = null;
 let currentEnvironment = null;
 let settings = null;
 let expandedEnvironmentId = null;
+
+function createLucideIcon(nodes, className = "popup-icon") {
+  const namespace = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(namespace, "svg");
+  svg.setAttribute("viewBox", "0 0 24 24");
+  svg.setAttribute("aria-hidden", "true");
+  svg.classList.add(className);
+
+  nodes.forEach(([tagName, attrs]) => {
+    const node = document.createElementNS(namespace, tagName);
+    Object.entries(LUCIDE_ICON_ATTRS).forEach(([key, value]) => node.setAttribute(key, value));
+    Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, value));
+    svg.append(node);
+  });
+
+  return svg;
+}
+
+function decoratePopupButtons() {
+  openOptionsButton.textContent = "";
+  openOptionsButton.append(
+    createLucideIcon([
+      ["path", { d: "M3.828 9.56a3.1 3.1 0 0 1-.002 4.865 2 2 0 0 0 1.98 3.425 3.1 3.1 0 0 1 4.211 2.434 2 2 0 0 0 3.958.002 3.1 3.1 0 0 1 4.213-2.431 2 2 0 0 0 1.983-3.424 3.1 3.1 0 0 1 .001-4.866 2 2 0 0 0-1.978-3.425 3.1 3.1 0 0 1-4.214-2.421 2 2 0 0 0-3.961.004A3.1 3.1 0 0 1 5.81 6.135 2 2 0 0 0 3.828 9.56" }],
+      ["circle", { cx: "12", cy: "12", r: "3" }]
+    ])
+  );
+}
 
 function wildcardToRegExp(pattern) {
   const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*");
@@ -153,6 +187,20 @@ async function openQuickAddEnvironment() {
   window.close();
 }
 
+async function openCurrentEnvironmentInOptions() {
+  const params = new URLSearchParams({ source: "popup" });
+  if (currentEnvironment?.id) {
+    params.set("environmentId", currentEnvironment.id);
+  }
+  if (currentTab?.url) {
+    params.set("url", currentTab.url);
+  }
+  await chrome.tabs.create({
+    url: `${chrome.runtime.getURL("options/options.html")}?${params.toString()}`
+  });
+  window.close();
+}
+
 function renderEnvironment() {
   const url = currentTab?.url || "";
   const suggestedPrefix = buildSuggestedPrefix(url);
@@ -249,10 +297,9 @@ environmentEnabledNode.addEventListener("change", async () => {
   renderEnvironment();
 });
 
-openOptionsButton.addEventListener("click", () => {
-  chrome.runtime.openOptionsPage();
-});
+openOptionsButton.addEventListener("click", openCurrentEnvironmentInOptions);
 
 quickAddEnvironmentNode.addEventListener("click", openQuickAddEnvironment);
 
+decoratePopupButtons();
 init();

@@ -6,6 +6,69 @@ const TEXT_COLOR_PRESETS = ["#ffffff", "#f8fafc", "#e2e8f0", "#111827", "#0f172a
 const EXPORTED_PASSWORD_SCHEME = "emsec";
 const EXPORTED_PASSWORD_VERSION = "v1";
 const EXPORTED_PASSWORD_KEY_V1 = "EnvMate export password v1";
+const LUCIDE_ICON_ATTRS = {
+  fill: "none",
+  stroke: "currentColor",
+  "stroke-linecap": "round",
+  "stroke-linejoin": "round",
+  "stroke-width": "2"
+};
+const LUCIDE_ICON_NODES = {
+  plus: [
+    ["path", { d: "M12 5v14" }],
+    ["path", { d: "M5 12h14" }]
+  ],
+  flaskConical: [
+    ["path", { d: "M10 2v7.31" }],
+    ["path", { d: "M14 9.3V2" }],
+    ["path", { d: "M8.5 2h7" }],
+    ["path", { d: "M14 9.3a6.5 6.5 0 1 1-4 0" }],
+    ["path", { d: "M5.58 16h12.85" }]
+  ],
+  download: [
+    ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" }],
+    ["path", { d: "m7 10 5 5 5-5" }],
+    ["path", { d: "M12 15V3" }]
+  ],
+  upload: [
+    ["path", { d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" }],
+    ["path", { d: "M17 8l-5-5-5 5" }],
+    ["path", { d: "M12 3v12" }]
+  ],
+  save: [
+    ["path", { d: "M15.2 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.8Z" }],
+    ["path", { d: "M17 21v-8H7v8" }],
+    ["path", { d: "M7 3v5h8" }]
+  ],
+  badgeHelp: [
+    ["circle", { cx: "12", cy: "12", r: "10" }],
+    ["path", { d: "M9.09 9a3 3 0 0 1 5.82 1c0 2-3 3-3 3" }],
+    ["path", { d: "M12 17h.01" }]
+  ],
+  edit: [
+    ["path", { d: "M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" }],
+    ["path", { d: "M18.5 2.5a2.12 2.12 0 1 1 3 3L12 15l-4 1 1-4Z" }]
+  ],
+  trash: [
+    ["path", { d: "M3 6h18" }],
+    ["path", { d: "M8 6V4h8v2" }],
+    ["path", { d: "M19 6l-1 14H6L5 6" }],
+    ["path", { d: "M10 11v6" }],
+    ["path", { d: "M14 11v6" }]
+  ],
+  copy: [
+    ["rect", { x: "9", y: "9", width: "13", height: "13", rx: "2", ry: "2" }],
+    ["path", { d: "M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" }]
+  ],
+  x: [
+    ["path", { d: "M18 6 6 18" }],
+    ["path", { d: "m6 6 12 12" }]
+  ],
+  power: [
+    ["path", { d: "M12 2v10" }],
+    ["path", { d: "M18.4 6.6a9 9 0 1 1-12.8 0" }]
+  ]
+};
 
 function createSampleSettings() {
   return {
@@ -487,7 +550,7 @@ async function handleLocaleChange(nextLocale) {
 function syncSaveButtonState() {
   if (!nodes.save) return;
   nodes.save.classList.toggle("is-dirty", hasUnsavedChanges);
-  nodes.save.textContent = hasUnsavedChanges ? t("savePending") : t("save");
+  applyButtonIcon(nodes.save, "save", hasUnsavedChanges ? t("savePending") : t("save"));
 }
 
 function restoreSavedSettingsSnapshot() {
@@ -620,7 +683,7 @@ function selectEnvironment(groupId, environmentId) {
 
 function syncEnabledLabel() {
   if (!nodes.enabled || !nodes.enabledLabel) return;
-  nodes.enabledLabel.textContent = nodes.enabled.checked ? t("environmentEnabledOn") : t("environmentEnabledOff");
+  applyInlineStatusIcon(nodes.enabledLabel, "power", nodes.enabled.checked ? t("environmentEnabledOn") : t("environmentEnabledOff"));
 }
 
 function selectedBadgeStyle() {
@@ -1048,29 +1111,20 @@ function ruleTypeLabel(type) {
   return t("ruleTypeWildcard");
 }
 
-function createIconGraphic(name) {
+function createLucideIcon(name, className = "group-icon") {
   const namespace = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(namespace, "svg");
   svg.setAttribute("viewBox", "0 0 24 24");
   svg.setAttribute("aria-hidden", "true");
-  svg.classList.add("group-icon");
+  svg.classList.add(className);
 
-  const path = document.createElementNS(namespace, "path");
-  path.setAttribute("fill", "none");
-  path.setAttribute("stroke", "currentColor");
-  path.setAttribute("stroke-linecap", "round");
-  path.setAttribute("stroke-linejoin", "round");
-  path.setAttribute("stroke-width", "1.8");
+  (LUCIDE_ICON_NODES[name] || []).forEach(([tagName, attrs]) => {
+    const node = document.createElementNS(namespace, tagName);
+    Object.entries(LUCIDE_ICON_ATTRS).forEach(([key, value]) => node.setAttribute(key, value));
+    Object.entries(attrs).forEach(([key, value]) => node.setAttribute(key, value));
+    svg.append(node);
+  });
 
-  if (name === "edit") {
-    path.setAttribute("d", "M12 20h9M16.5 3.5a2.1 2.1 0 1 1 3 3L7 19l-4 1 1-4Z");
-  } else if (name === "drag") {
-    path.setAttribute("d", "M9 5v14M15 5v14M6 8h0M6 12h0M6 16h0M18 8h0M18 12h0M18 16h0");
-  } else {
-    path.setAttribute("d", "M3 6h18M8 6V4h8v2m-7 0v13m6-13v13M6 6l1 14h10l1-14");
-  }
-
-  svg.append(path);
   return svg;
 }
 
@@ -1079,9 +1133,53 @@ function createGroupIconButton(iconName, className, title, onClick) {
   button.type = "button";
   button.className = className;
   button.title = title;
-  button.append(createIconGraphic(iconName));
+  button.append(createLucideIcon(iconName));
   button.addEventListener("click", onClick);
   return button;
+}
+
+function applyButtonIcon(button, iconName, label) {
+  if (!button) return;
+  button.textContent = "";
+  button.classList.add("button-with-icon");
+  button.append(createLucideIcon(iconName, "button-icon"));
+
+  const text = document.createElement("span");
+  text.className = "button-label";
+  text.textContent = label;
+  button.append(text);
+}
+
+function applyIconOnlyButton(button, iconName) {
+  if (!button) return;
+  button.textContent = "";
+  button.append(createLucideIcon(iconName));
+}
+
+function applyInlineStatusIcon(container, iconName, label) {
+  if (!container) return;
+  container.textContent = "";
+  container.classList.add("inline-status");
+  container.append(createLucideIcon(iconName, "inline-status__icon"));
+  const text = document.createElement("span");
+  text.className = "inline-status__label";
+  text.textContent = label;
+  container.append(text);
+}
+
+function decorateStaticButtons() {
+  applyButtonIcon(nodes.loadSample, "flaskConical", t("loadSample"));
+  applyButtonIcon(nodes.exportConfig, "download", t("export"));
+  applyButtonIcon(nodes.importConfigTrigger, "upload", t("import"));
+  applyButtonIcon(nodes.aboutTrigger, "badgeHelp", t("about"));
+  applyButtonIcon(nodes.addGroup, "plus", t("addGroup"));
+  applyButtonIcon(nodes.addRule, "plus", t("addRule"));
+  applyButtonIcon(nodes.addAccount, "plus", t("addAccount"));
+  applyButtonIcon(nodes.save, "save", t("save"));
+  applyButtonIcon(nodes.deleteEnvironment, "trash", t("deleteEnvironment"));
+  applyIconOnlyButton(nodes.exportModalClose, "x");
+  applyIconOnlyButton(nodes.importModalClose, "x");
+  applyIconOnlyButton(nodes.aboutModalClose, "x");
 }
 
 function markChanged() {
@@ -1122,6 +1220,17 @@ function buildQuickEnvironment(title, prefixValue) {
     rules: [{ type: "prefix", value: prefixValue }],
     accounts: []
   };
+}
+
+function selectEnvironmentFromQuery() {
+  const params = new URLSearchParams(window.location.search);
+  const environmentId = String(params.get("environmentId") || "").trim();
+  if (!environmentId) return false;
+  const environment = settings.environments.find((item) => item.id === environmentId);
+  if (!environment) return false;
+  selectedGroupId = environment.groupId || DEFAULT_GROUP_ID;
+  selectedId = environment.id;
+  return true;
 }
 
 function renderGroupOptions() {
@@ -1188,7 +1297,7 @@ function renderEnvironmentList() {
     const actions = document.createElement("div");
     actions.className = "environment-group__actions";
 
-    const rename = createGroupIconButton("edit", "group-icon-button", t("renameGroup"), (event) => {
+    const rename = createGroupIconButton("edit", "group-icon-button group-icon-button--edit", t("renameGroup"), (event) => {
       event.stopPropagation();
       renameGroup(group.id);
     });
@@ -1204,8 +1313,12 @@ function renderEnvironmentList() {
 
     const addEnvironmentButton = document.createElement("button");
     addEnvironmentButton.type = "button";
-    addEnvironmentButton.className = "group-action";
-    addEnvironmentButton.textContent = t("addEnvironment");
+    addEnvironmentButton.className = "group-action button-with-icon";
+    addEnvironmentButton.append(createLucideIcon("plus", "button-icon"));
+    const addEnvironmentLabel = document.createElement("span");
+    addEnvironmentLabel.className = "button-label";
+    addEnvironmentLabel.textContent = t("addEnvironment");
+    addEnvironmentButton.append(addEnvironmentLabel);
     addEnvironmentButton.addEventListener("click", (event) => {
       event.stopPropagation();
       addEnvironment(group.id);
@@ -1214,8 +1327,12 @@ function renderEnvironmentList() {
 
     const duplicate = document.createElement("button");
     duplicate.type = "button";
-    duplicate.className = "group-action";
-    duplicate.textContent = t("duplicate");
+    duplicate.className = "group-action button-with-icon";
+    duplicate.append(createLucideIcon("copy", "button-icon"));
+    const duplicateLabel = document.createElement("span");
+    duplicateLabel.className = "button-label";
+    duplicateLabel.textContent = t("duplicate");
+    duplicate.append(duplicateLabel);
     duplicate.disabled = !settings.environments.some((environment) => environment.groupId === group.id);
     duplicate.addEventListener("click", (event) => {
       event.stopPropagation();
@@ -1349,8 +1466,8 @@ function createRuleRow(rule, index) {
   const remove = document.createElement("button");
   remove.type = "button";
   remove.className = "remove-button";
-  remove.textContent = "x";
   remove.title = t("removeRule");
+  remove.append(createLucideIcon("x", "remove-button__icon"));
 
   type.addEventListener("change", () => {
     const environment = selectedEnvironment();
@@ -1415,8 +1532,8 @@ function createAccountRow(account, index) {
   const remove = document.createElement("button");
   remove.type = "button";
   remove.className = "remove-button";
-  remove.textContent = "x";
   remove.title = t("removeAccount");
+  remove.append(createLucideIcon("x", "remove-button__icon"));
 
   dragHandle.addEventListener("dragstart", (event) => {
     draggingAccountId = account.id;
@@ -1688,6 +1805,7 @@ function render() {
   if (!selectedEnvironment() && settings.environments.length) {
     selectedId = settings.environments.find((environment) => environment.groupId === selectedGroupId)?.id || settings.environments[0].id;
   }
+  decorateStaticButtons();
   renderEnvironmentList();
   renderForm();
   syncRailNav();
@@ -2134,6 +2252,8 @@ async function loadSettings() {
   syncAboutModalState();
   const result = await chrome.storage.local.get([STORAGE_KEY]);
   applySettings(result[STORAGE_KEY] || createSampleSettings(), t("ready"));
+  selectEnvironmentFromQuery();
+  render();
   await handleQuickAddFromQuery();
 }
 
