@@ -553,6 +553,10 @@ function syncSaveButtonState() {
   applyButtonIcon(nodes.save, "save", hasUnsavedChanges ? t("savePending") : t("save"));
 }
 
+function settingsDifferFromSavedSnapshot() {
+  return JSON.stringify(settings) !== JSON.stringify(savedSettingsSnapshot);
+}
+
 function restoreSavedSettingsSnapshot() {
   settings = clone(savedSettingsSnapshot);
   hasUnsavedChanges = false;
@@ -1169,8 +1173,8 @@ function applyInlineStatusIcon(container, iconName, label) {
 
 function decorateStaticButtons() {
   applyButtonIcon(nodes.loadSample, "flaskConical", t("loadSample"));
-  applyButtonIcon(nodes.exportConfig, "download", t("export"));
-  applyButtonIcon(nodes.importConfigTrigger, "upload", t("import"));
+  applyButtonIcon(nodes.exportConfig, "upload", t("export"));
+  applyButtonIcon(nodes.importConfigTrigger, "download", t("import"));
   applyButtonIcon(nodes.aboutTrigger, "badgeHelp", t("about"));
   applyButtonIcon(nodes.addGroup, "plus", t("addGroup"));
   applyButtonIcon(nodes.addRule, "plus", t("addRule"));
@@ -1184,9 +1188,9 @@ function decorateStaticButtons() {
 
 function markChanged() {
   if (!isRendering) {
-    hasUnsavedChanges = true;
+    hasUnsavedChanges = settingsDifferFromSavedSnapshot();
     syncSaveButtonState();
-    setStatus(t("unsavedChanges"));
+    setStatus(hasUnsavedChanges ? t("unsavedChanges") : t("ready"));
   }
 }
 
