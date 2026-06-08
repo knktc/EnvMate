@@ -14,7 +14,7 @@
   "close": { "message": "Close" },
   "displayLanguage": { "message": "Display Language" },
   "localeAuto": { "message": "Follow Browser" },
-  "localeZhCN": { "message": "Simplified Chinese" },
+  "localeZhCN": { "message": "简体中文" },
   "localeEn": { "message": "English" },
   "cancel": { "message": "Cancel" },
   "exportSelected": { "message": "Export Selected" },
