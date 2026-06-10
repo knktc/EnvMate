@@ -1,52 +1,82 @@
-# EnvMate
+<p align="center">
+  <img src="assets/icons/icon-128-display.png" alt="EnvMate logo" width="96" height="96">
+</p>
 
-EnvMate is a Chrome extension for development and test teams that work with many visually similar web environments. It adds environment markers to pages, prefixes titles, and fills configured test accounts on demand.
+<h1 align="center">EnvMate</h1>
 
-## First Version
+<p align="center">
+  A Chrome extension for teams that switch between development, testing, staging, and production environments all day.
+</p>
 
-- Match environments by URL prefix, wildcard, or regular expression.
-- Inject a page badge, optional watermark, and optional title prefix.
-- Show the current environment in the extension popup.
-- Fill configured test usernames and passwords after a user click.
-- Manage environments with an interactive options page.
+<p align="center">
+  EnvMate makes the active environment obvious, keeps test accounts close at hand, and helps reduce mistakes caused by visually similar systems.
+</p>
+
+## Highlights
+
+- Detect environments by URL rules.
+- Show a badge, watermark, or both on matched pages.
+- Optionally prefix the page title with the environment label.
+- Manage grouped environments from a dedicated options page.
+- Store multiple test accounts per environment and fill them on demand.
+- Show the matched environment directly in the extension popup.
+
+## Why EnvMate
+
+Many internal systems look nearly identical across dev, test, pre-release, and production. EnvMate adds lightweight visual signals so you can tell where you are before you click, edit, or submit anything important.
+
+## URL Rule Types
+
+- `wildcard`: supports `*`, for example `https://test.example.com/*`
+- `prefix`: matches URL prefixes, for example `https://pre.example.com/`
+- `regex`: uses JavaScript regular expressions
+
+## Marker Options
+
+- `badge`: floating environment badge only
+- `watermark`: watermark only
+- `badge-watermark`: badge and watermark together
+
+Badge settings support style, position, size, offset, and opacity.
+
+Watermark settings support text, opacity, angle, size, and spacing.
+
+## Test Accounts
+
+Each environment can store multiple test accounts. Accounts can be reordered, marked as the default fill target, and filled from the popup when the current page matches that environment.
+
+EnvMate only fills fields after an explicit user action. It does not submit forms or trigger login buttons automatically.
 
 ## Install Locally
 
 1. Open `chrome://extensions`.
 2. Enable `Developer mode`.
 3. Click `Load unpacked`.
-4. Select this folder: `/Users/knktc/scripts/apps/EnvMate`.
+4. Select the project folder.
 
-## Release Packaging
+## Configure Environments
 
-- Run `make zip` to create `dist/envmate-<version>.zip` for release distribution.
-- Run `make crx` to pack a `.crx` from the command line with Chrome.
-- Run `make crx KEY=path/to/key.pem` to reuse the same signing key across builds.
-- If you do not pass `KEY`, Chrome will generate a new private key at `.keys/envmate-<version>.pem`, which changes the extension identity.
-- Never commit files in `.keys/`. They are private signing keys, not public release assets.
+Open the extension options page to:
 
-## Configuration
+- create groups
+- add environments to a group
+- configure URL matching rules
+- customize badge and watermark appearance
+- add and manage test accounts
 
-Open the extension options page. You can add groups, add environments inside a group, edit colors, choose marker styles, add URL rules, and add test accounts through the form UI.
+The most important part of each environment is its `URL Rules`, because those rules determine when EnvMate should activate on a page.
 
-Use `Add Environment` to create a new environment. The most important field is `URL Rules`, because EnvMate uses those rules to decide which marker to show on a page.
+## Typical Use Cases
 
-Each environment belongs to a group. New environments start in `Default Group`, and the sidebar clusters environments by group so multiple business systems are easier to scan. Removing a group moves its environments back into `Default Group`.
+- Add a bright badge to production pages so they never look like test.
+- Prefix page titles to make environment differences visible in browser tabs.
+- Keep shared QA or staging accounts available without digging through notes.
+- Group environments by product or business line so large setups stay manageable.
 
-Rule types:
+## Build Release Artifacts
 
-- `wildcard`: supports `*`, for example `https://test.example.com/*`.
-- `prefix`: matches URL prefixes, for example `https://pre.example.com/`.
-- `regex`: uses JavaScript regular expressions.
+- `make zip`: create `dist/envmate-<version>.zip`
+- `make crx`: build a `.crx` package with Chrome
+- `make crx KEY=path/to/key.pem`: reuse an existing signing key
 
-Marker modes:
-
-- `badge`: floating environment badge only.
-- `watermark`: watermark only.
-- `badge-watermark`: both badge and watermark.
-
-Badge advanced settings support `pill` and `corner ribbon` styles, position, offset, and opacity.
-
-Watermark advanced settings support opacity, rotation angle, text size, and spacing.
-
-Account filling is click-triggered from the popup or the page account panel. EnvMate does not silently submit forms or click login buttons.
+If `KEY` is not provided, Chrome creates a new private key in `.keys/`, which changes the extension identity. Do not commit files in `.keys/`.
