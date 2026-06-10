@@ -31,6 +31,7 @@ stage: $(DIST_DIR)
 	@rm -rf "$(ZIP_STAGE_DIR)" "$(CRX_STAGE_DIR)"
 	@mkdir -p "$(ZIP_STAGE_DIR)" "$(CRX_STAGE_DIR)"
 	@for item in $(PACKAGE_CONTENTS); do cp -R "$$item" "$(ZIP_STAGE_DIR)/$$item"; cp -R "$$item" "$(CRX_STAGE_DIR)/$$item"; done
+	@find "$(ZIP_STAGE_DIR)" "$(CRX_STAGE_DIR)" \( -name '.DS_Store' -o -name '__MACOSX' \) -print0 | xargs -0 rm -rf
 	@echo "Staged extension files in $(ZIP_STAGE_DIR) and $(CRX_STAGE_DIR)"
 
 zip: stage
@@ -40,7 +41,7 @@ zip: stage
 
 crx: stage $(KEYS_DIR)
 	@test -x "$(CHROME)" || { echo "Chrome executable not found at $(CHROME)"; exit 1; }
-	@rm -f "$(abspath $(CRX_STAGE_DIR)).crx" "$(abspath $(CRX_STAGE_DIR)).pem" "$(CRX_FILE)" "$(GENERATED_KEY_FILE)"
+	@rm -f "$(abspath $(CRX_STAGE_DIR)).crx" "$(abspath $(CRX_STAGE_DIR)).pem" "$(CRX_FILE)"
 	@if [ -n "$(KEY)" ]; then \
 		test -f "$(KEY)" || { echo "Key file not found: $(KEY)"; exit 1; }; \
 		"$(CHROME)" --pack-extension="$(abspath $(CRX_STAGE_DIR))" --pack-extension-key="$(abspath $(KEY))"; \
@@ -49,7 +50,7 @@ crx: stage $(KEYS_DIR)
 		"$(CHROME)" --pack-extension="$(abspath $(CRX_STAGE_DIR))"; \
 	fi
 	@mv -f "$(abspath $(CRX_STAGE_DIR)).crx" "$(CRX_FILE)"
-	@if [ -f "$(abspath $(CRX_STAGE_DIR)).pem" ]; then mv -f "$(abspath $(CRX_STAGE_DIR)).pem" "$(GENERATED_KEY_FILE)"; fi
+	@if [ -f "$(abspath $(CRX_STAGE_DIR)).pem" ]; then rm -f "$(GENERATED_KEY_FILE)"; mv -f "$(abspath $(CRX_STAGE_DIR)).pem" "$(GENERATED_KEY_FILE)"; fi
 	@echo "Built $(CRX_FILE)"
 	@if [ -f "$(GENERATED_KEY_FILE)" ]; then echo "Generated signing key at $(GENERATED_KEY_FILE)"; fi
 
