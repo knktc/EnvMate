@@ -21,6 +21,10 @@
 - Store multiple test accounts per environment and fill them on demand.
 - Show the matched environment directly in the extension popup.
 
+## Install from Chrome Web Store
+
+[Install EnvMate from the Chrome Web Store](https://chromewebstore.google.com/detail/envmate/mccdmjfnlkkjmcioapnehkmpgkblhiei)
+
 ## Why EnvMate
 
 Many internal systems look nearly identical across dev, test, pre-release, and production. EnvMate adds lightweight visual signals so you can tell where you are before you click, edit, or submit anything important.
