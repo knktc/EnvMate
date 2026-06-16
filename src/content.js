@@ -278,39 +278,61 @@
     };
   }
 
-  function setInputValue(input, value) {
-    const prototype = input instanceof HTMLTextAreaElement ? window.HTMLTextAreaElement.prototype : window.HTMLInputElement.prototype;
-    const setter = Object.getOwnPropertyDescriptor(prototype, "value")?.set;
-    if (setter) {
-      setter.call(input, value);
-    } else {
-      input.value = value;
-    }
-    input.dispatchEvent(new Event("input", { bubbles: true }));
-    input.dispatchEvent(new Event("change", { bubbles: true }));
+  function normalizeText(value) {
+    return String(value || "").trim().toLowerCase();
   }
 
-  function showToast(account) {
-    document.querySelectorAll('[data-envmate-root="toast"]').forEach((node) => node.remove());
-    const toast = document.createElement("div");
-    toast.className = "envmate-toast";
-    toast.dataset.envmateRoot = "toast";
-    toast.style.setProperty("--envmate-color", activeEnvironment?.badgeColor || activeEnvironment?.color || "#2563eb");
-
-    const title = document.createElement("div");
-    title.className = "envmate-toast__title";
-    title.textContent = t("defaultFill");
-
-    const detail = document.createElement("div");
-    detail.className = "envmate-toast__detail";
-    detail.textContent = accountDisplayLabel(account);
-
-    toast.append(title, detail);
-    document.documentElement.append(toast);
-    window.setTimeout(() => toast.remove(), 2200);
+  function tokenizeInput(input) {
+    if (!input) return "";
+    const labelText = input.labels ? Array.from(input.labels).map((label) => label.textContent || "").join(" ") : "";
+    return normalizeText([
+      input.getAttribute("name"),
+      input.getAttribute("id"),
+      input.getAttribute("class"),
+      input.getAttribute("placeholder"),
+      input.getAttribute("aria-label"),
+      input.getAttribute("autocomplete"),
+      labelText
+    ].join(" "));
   }
 
-  function fillAccount(account) {
+  function findSubmitControl(root) {
+    if (!root) return null;
+    return root.querySelector(
+      'button[type="submit"], input[type="submit"], button, [role="button"], .btn, .button'
+    );
+  }
+
+  function authContextText(input) {
+    if (!input) return "";
+    const form = input.closest("form");
+    const submit = findSubmitControl(form || input.closest('[role="dialog"], .modal, .dialog, main, section, article') || document.body);
+    return normalizeText([
+      form?.getAttribute("id"),
+      form?.getAttribute("name"),
+      form?.getAttribute("class"),
+      form?.getAttribute("action"),
+      submit?.textContent,
+      submit?.getAttribute("aria-label"),
+      document.title
+    ].join(" "));
+  }
+
+  function inputMatchesKeywords(input, keywords) {
+    if (!input) return false;
+    return keywords.test(tokenizeInput(input));
+  }
+
+  function hasAuthContext(input) {
+    return /(login|log in|signin|sign in|auth|sso|登录|登陆|认证)/i.test(authContextText(input));
+  }
+
+  function isSameForm(left, right) {
+    if (!left || !right) return false;
+    return left.closest("form") && left.closest("form") === right.closest("form");
+  }
+
+  function resolveLoginInputs() {
     const inferred = inferInputs();
     const usernameInput = findInput([
       'input[name="username"]',
@@ -359,14 +381,82 @@
       'input[placeholder*="Password" i]'
     ]) || inferred.passwordInput;
 
+    return {
+      usernameInput,
+      passwordInput,
+      usernameCandidates: inferred.usernameCandidates,
+      passwordCandidates: inferred.passwordCandidates
+    };
+  }
+
+  function isLikelyLoginForm(usernameInput, passwordInput) {
+    if (!passwordInput) return false;
+
+    const usernameLooksExplicit = inputMatchesKeywords(
+      usernameInput,
+      /(username|user|account|login|email|phone|mobile|tel|用户名|账号|账户|登录名|邮箱|手机|工号)/i
+    );
+    const passwordLooksExplicit = inputMatchesKeywords(passwordInput, /(password|passwd|pwd|密码)/i);
+    const sharedForm = isSameForm(usernameInput, passwordInput);
+    const contextMatches = hasAuthContext(passwordInput) || hasAuthContext(usernameInput);
+
+    return Boolean(passwordLooksExplicit && (sharedForm || usernameLooksExplicit || contextMatches));
+  }
+
+  function setInputValue(input, value) {
+    const prototype = input instanceof HTMLTextAreaElement ? window.HTMLTextAreaElement.prototype : window.HTMLInputElement.prototype;
+    const setter = Object.getOwnPropertyDescriptor(prototype, "value")?.set;
+    if (setter) {
+      setter.call(input, value);
+    } else {
+      input.value = value;
+    }
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  }
+
+  function showToast(account) {
+    document.querySelectorAll('[data-envmate-root="toast"]').forEach((node) => node.remove());
+    const toast = document.createElement("div");
+    toast.className = "envmate-toast";
+    toast.dataset.envmateRoot = "toast";
+    toast.style.setProperty("--envmate-color", activeEnvironment?.badgeColor || activeEnvironment?.color || "#2563eb");
+
+    const title = document.createElement("div");
+    title.className = "envmate-toast__title";
+    title.textContent = t("defaultFill");
+
+    const detail = document.createElement("div");
+    detail.className = "envmate-toast__detail";
+    detail.textContent = accountDisplayLabel(account);
+
+    toast.append(title, detail);
+    document.documentElement.append(toast);
+    window.setTimeout(() => toast.remove(), 2200);
+  }
+
+  function fillAccount(account, options = {}) {
+    const { auto = false } = options;
+    const resolved = resolveLoginInputs();
+    const { usernameInput, passwordInput } = resolved;
+
+    if (auto && !isLikelyLoginForm(usernameInput, passwordInput)) {
+      return {
+        usernameFilled: false,
+        passwordFilled: false,
+        usernameCandidates: resolved.usernameCandidates,
+        passwordCandidates: resolved.passwordCandidates
+      };
+    }
+
     if (usernameInput && account.username) setInputValue(usernameInput, account.username);
     if (passwordInput && account.password) setInputValue(passwordInput, account.password);
 
     return {
       usernameFilled: Boolean(usernameInput && account.username),
       passwordFilled: Boolean(passwordInput && account.password),
-      usernameCandidates: inferred.usernameCandidates,
-      passwordCandidates: inferred.passwordCandidates
+      usernameCandidates: resolved.usernameCandidates,
+      passwordCandidates: resolved.passwordCandidates
     };
   }
 
@@ -381,7 +471,7 @@
     let attempts = 0;
     const tryFill = () => {
       attempts += 1;
-      const result = fillAccount(account);
+      const result = fillAccount(account, { auto: true });
       if (result.usernameFilled || result.passwordFilled) {
         showToast(account);
         clearAutoFill();
