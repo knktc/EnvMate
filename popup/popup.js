@@ -7,12 +7,16 @@ const environmentCardNode = document.querySelector("#environment-card");
 const popupNode = document.querySelector(".popup");
 const environmentToggleNode = document.querySelector("#environment-toggle");
 const environmentEnabledNode = document.querySelector("#environment-enabled");
+const favoritesSectionNode = document.querySelector("#favorites-section");
+const favoritesNode = document.querySelector("#favorites");
+const favoritesMoreNode = document.querySelector("#favorites-more");
 const accountsSectionNode = document.querySelector("#accounts-section");
 const accountsNode = document.querySelector("#accounts");
 const openOptionsButton = document.querySelector("#open-options");
 const quickAddEnvironmentNode = document.querySelector("#quick-add-environment");
 const t = window.envmateI18n.t;
 const DEFAULT_VISIBLE_ACCOUNTS = 3;
+const DEFAULT_VISIBLE_FAVORITE_GROUPS = 3;
 const LUCIDE_ICON_ATTRS = {
   fill: "none",
   stroke: "currentColor",
@@ -25,6 +29,8 @@ let currentTab = null;
 let currentEnvironment = null;
 let settings = null;
 let expandedEnvironmentId = null;
+let expandedFavoriteGroups = new Set();
+let showAllFavoriteGroups = false;
 
 function createLucideIcon(nodes, className = "popup-icon") {
   const namespace = "http://www.w3.org/2000/svg";
@@ -112,6 +118,15 @@ function markerLabel(environment) {
   return badge || name || t("environmentFallback");
 }
 
+function homepageUrl(environment) {
+  return String(environment?.homepageUrl || "").trim();
+}
+
+function quickAccessTimestamp(environment) {
+  const nextValue = Number(environment?.lastQuickAccessAt ?? 0);
+  return Number.isFinite(nextValue) && nextValue > 0 ? nextValue : 0;
+}
+
 function accountDisplayLabel(account) {
   const username = String(account?.username || "").trim();
   const label = String(account?.label || "").trim();
@@ -169,6 +184,162 @@ function buildSuggestedPrefix(url) {
   }
 }
 
+function isReusableCurrentTab(url) {
+  const nextUrl = String(url || "").trim();
+  return !nextUrl || nextUrl === "about:blank" || nextUrl === "chrome://newtab/" || nextUrl.startsWith("chrome://new-tab-page/");
+}
+
+function groupedFavoriteEnvironments(config) {
+  const environments = Array.isArray(config?.environments) ? config.environments : [];
+  const configuredGroups = Array.isArray(config?.groups) ? config.groups : [];
+  const groupOrder = configuredGroups.length
+    ? configuredGroups
+    : [{ id: "default", name: t("defaultGroup") }];
+  const knownGroups = new Map(groupOrder.map((group) => [group.id, { group, environments: [] }]));
+
+  environments.forEach((environment, index) => {
+    if (environment.enabled === false || !homepageUrl(environment)) return;
+    const groupId = environment.groupId || "default";
+    if (!knownGroups.has(groupId)) {
+      knownGroups.set(groupId, {
+        group: { id: groupId, name: environment.group || t("defaultGroup") },
+        environments: []
+      });
+    }
+    knownGroups.get(groupId).environments.push({ environment, originalIndex: index });
+  });
+
+  return Array.from(knownGroups.values())
+    .map((entry) => ({
+      ...entry,
+      environments: entry.environments
+        .sort((left, right) => {
+          const leftTimestamp = quickAccessTimestamp(left.environment);
+          const rightTimestamp = quickAccessTimestamp(right.environment);
+          if (leftTimestamp && rightTimestamp && leftTimestamp !== rightTimestamp) {
+            return rightTimestamp - leftTimestamp;
+          }
+          if (leftTimestamp && !rightTimestamp) return -1;
+          if (!leftTimestamp && rightTimestamp) return 1;
+          return left.originalIndex - right.originalIndex;
+        })
+        .map((item) => item.environment)
+    }))
+    .filter((entry) => entry.environments.length);
+}
+
+async function openFavoriteEnvironment(environment) {
+  const url = homepageUrl(environment);
+  if (!url) return;
+  const visitedAt = Date.now();
+  if (settings?.environments) {
+    settings.environments = settings.environments.map((item) =>
+      item.id === environment.id ? { ...item, lastQuickAccessAt: visitedAt } : item
+    );
+    await chrome.storage.local.set({ [STORAGE_KEY]: settings });
+  }
+  if (currentTab?.id !== undefined && isReusableCurrentTab(currentTab?.url)) {
+    await chrome.tabs.update(currentTab.id, { url, active: true });
+  } else {
+    await chrome.tabs.create({ url, active: true });
+  }
+  window.close();
+}
+
+function renderFavorites() {
+  favoritesNode.innerHTML = "";
+  const groups = groupedFavoriteEnvironments(settings);
+  if (!groups.length) {
+    favoritesSectionNode.hidden = true;
+    favoritesMoreNode.hidden = true;
+    return;
+  }
+
+  favoritesSectionNode.hidden = false;
+  const visibleGroups = showAllFavoriteGroups ? groups : groups.slice(0, DEFAULT_VISIBLE_FAVORITE_GROUPS);
+
+  visibleGroups.forEach(({ group, environments }) => {
+    const wrap = document.createElement("section");
+    wrap.className = "favorite-group";
+    const isExpanded = expandedFavoriteGroups.has(group.id);
+    wrap.classList.toggle("is-expanded", isExpanded);
+
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "favorite-group__toggle";
+
+    const summary = document.createElement("div");
+    summary.className = "favorite-group__summary";
+    const title = document.createElement("div");
+    title.className = "favorite-group__title";
+    title.textContent = group.name;
+    const meta = document.createElement("div");
+    meta.className = "favorite-group__meta";
+    meta.textContent = t("groupEnvironmentCount", [String(environments.length)]);
+    summary.append(title, meta);
+
+    const chevron = document.createElement("span");
+    chevron.className = "favorite-group__chevron";
+    chevron.textContent = "›";
+
+    toggle.append(summary, chevron);
+    toggle.addEventListener("click", () => {
+      if (expandedFavoriteGroups.has(group.id)) {
+        expandedFavoriteGroups.delete(group.id);
+      } else {
+        expandedFavoriteGroups.add(group.id);
+      }
+      renderFavorites();
+    });
+    wrap.append(toggle);
+
+    if (isExpanded) {
+      const list = document.createElement("div");
+      list.className = "favorite-group__list";
+      environments.forEach((environment) => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "favorite-link link-button";
+        button.addEventListener("click", () => {
+          openFavoriteEnvironment(environment).catch(() => {});
+        });
+
+        const head = document.createElement("div");
+        head.className = "favorite-link__head";
+
+        const name = document.createElement("span");
+        name.className = "favorite-link__name";
+        name.textContent = environment.name || t("environmentFallback");
+        head.append(name);
+
+        const badge = markerLabel(environment);
+        if (badge) {
+          const badgeNode = document.createElement("span");
+          badgeNode.className = "favorite-link__badge";
+          badgeNode.style.setProperty("--favorite-badge-color", environment.badgeColor || environment.color || "#2563eb");
+          badgeNode.style.setProperty("--favorite-badge-text", environment.badgeTextColor || environment.textColor || "#ffffff");
+          badgeNode.textContent = badge;
+          head.append(badgeNode);
+        }
+
+        const urlNode = document.createElement("div");
+        urlNode.className = "favorite-link__url";
+        urlNode.textContent = homepageUrl(environment);
+
+        button.append(head, urlNode);
+        list.append(button);
+      });
+      wrap.append(list);
+    }
+
+    favoritesNode.append(wrap);
+  });
+
+  const hasMoreGroups = groups.length > DEFAULT_VISIBLE_FAVORITE_GROUPS;
+  favoritesMoreNode.hidden = !hasMoreGroups;
+  favoritesMoreNode.textContent = showAllFavoriteGroups ? t("showLessGroups") : t("showMoreGroups");
+}
+
 async function openQuickAddEnvironment() {
   const sourceUrl = currentTab?.url || "";
   const urlPrefix = buildSuggestedPrefix(sourceUrl);
@@ -207,6 +378,7 @@ function renderEnvironment() {
   currentUrlNode.textContent = url || t("noActiveTab");
   quickAddEnvironmentNode.hidden = true;
   currentEnvironment = settings ? findEnvironment(settings, url, true) : null;
+  renderFavorites();
 
   if (!currentEnvironment) {
     environmentCardNode.style.borderColor = "";
@@ -300,6 +472,10 @@ environmentEnabledNode.addEventListener("change", async () => {
 openOptionsButton.addEventListener("click", openCurrentEnvironmentInOptions);
 
 quickAddEnvironmentNode.addEventListener("click", openQuickAddEnvironment);
+favoritesMoreNode.addEventListener("click", () => {
+  showAllFavoriteGroups = !showAllFavoriteGroups;
+  renderFavorites();
+});
 
 decoratePopupButtons();
 init();

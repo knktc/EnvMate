@@ -104,6 +104,7 @@ const nodes = {
   form: document.querySelector("#environment-form"),
   name: document.querySelector("#env-name"),
   group: document.querySelector("#env-group"),
+  homepageUrl: document.querySelector("#env-homepage-url"),
   badge: document.querySelector("#env-badge"),
   badgeEnabled: document.querySelector("#env-badge-enabled"),
   enabled: document.querySelector("#env-enabled"),
@@ -111,6 +112,7 @@ const nodes = {
   titlePrefix: document.querySelector("#env-title-prefix"),
   rules: document.querySelector("#rules-list"),
   accounts: document.querySelector("#accounts-list"),
+  basicValidation: document.querySelector("#basic-validation"),
   accountsValidation: document.querySelector("#accounts-validation"),
   badgeColor: document.querySelector("#badge-color"),
   badgeColorSwatches: document.querySelector("#badge-color-swatches"),
@@ -777,6 +779,51 @@ function accountHasInput(account) {
   );
 }
 
+function normalizeHomepageUrl(value) {
+  return String(value || "").trim();
+}
+
+function normalizeQuickAccessTimestamp(value) {
+  const nextValue = Number(value ?? 0);
+  return Number.isFinite(nextValue) && nextValue > 0 ? nextValue : 0;
+}
+
+function isValidHomepageUrl(value) {
+  if (!value) return true;
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === "http:" || parsed.protocol === "https:";
+  } catch (_) {
+    return false;
+  }
+}
+
+function homepageUrlFromSource(sourceUrl, fallbackUrl = "") {
+  const candidates = [sourceUrl, fallbackUrl];
+  for (const candidate of candidates) {
+    const nextValue = String(candidate || "").trim();
+    if (!nextValue) continue;
+    try {
+      const parsed = new URL(nextValue);
+      if (!["http:", "https:"].includes(parsed.protocol)) continue;
+      return `${parsed.origin}/`;
+    } catch (_) {
+      continue;
+    }
+  }
+  return "";
+}
+
+function findInvalidHomepageEnvironment() {
+  for (const environment of settings.environments) {
+    const homepageUrl = normalizeHomepageUrl(environment.homepageUrl);
+    if (homepageUrl && !isValidHomepageUrl(homepageUrl)) {
+      return environment;
+    }
+  }
+  return null;
+}
+
 function findEmptyAccount() {
   for (const environment of settings.environments) {
     const accountIndex = (environment.accounts || []).findIndex((account) => !accountHasInput(account));
@@ -797,6 +844,25 @@ function showAccountsValidationError(message) {
     activeSectionId = "section-accounts";
     syncRailNav();
     scrollSectionIntoView(accountsSection);
+  }
+}
+
+function clearBasicValidationError() {
+  if (!nodes.basicValidation) return;
+  nodes.basicValidation.hidden = true;
+  nodes.basicValidation.textContent = "";
+}
+
+function showBasicValidationError(message) {
+  if (nodes.basicValidation) {
+    nodes.basicValidation.hidden = false;
+    nodes.basicValidation.textContent = message;
+  }
+  const basicSection = document.getElementById("section-basic");
+  if (basicSection) {
+    activeSectionId = "section-basic";
+    syncRailNav();
+    scrollSectionIntoView(basicSection);
   }
 }
 
@@ -948,6 +1014,8 @@ function buildLocalizedSampleGroup() {
         id: uid("env"),
         groupId,
         name: prodName,
+        homepageUrl: "https://prod.example.com/",
+        lastQuickAccessAt: 0,
         enabled: true,
         badge: "PROD",
         badgeEnabled: true,
@@ -990,6 +1058,8 @@ function buildLocalizedSampleGroup() {
         id: uid("env"),
         groupId,
         name: devName,
+        homepageUrl: "https://dev.example.com/",
+        lastQuickAccessAt: 0,
         enabled: true,
         badge: "DEV",
         badgeEnabled: true,
@@ -1117,6 +1187,8 @@ function normalizeSettings(value) {
       id: environment.id || uid("env"),
       groupId: ensureGroupId(resolvedGroupId, next.groups),
       name: environment.name || t("newEnvironment"),
+      homepageUrl: normalizeHomepageUrl(environment.homepageUrl),
+      lastQuickAccessAt: normalizeQuickAccessTimestamp(environment.lastQuickAccessAt),
       enabled: environment.enabled !== false,
       badge: typeof environment.badge === "string" ? environment.badge : "",
       badgeEnabled,
@@ -1345,10 +1417,13 @@ function buildQuickEnvironment(title, prefixValue, sourceUrl = "") {
   const color = pickEnvironmentColor();
   const badge = detectQuickBadge(sourceUrl || prefixValue, title);
   const name = buildQuickEnvironmentName(title, sourceUrl || prefixValue, badge);
+  const homepageUrl = homepageUrlFromSource(sourceUrl, prefixValue);
   return {
     id: uid("env"),
     groupId: DEFAULT_GROUP_ID,
     name,
+    homepageUrl,
+    lastQuickAccessAt: 0,
     enabled: true,
     badge,
     badgeEnabled: true,
@@ -1589,7 +1664,7 @@ function renderEnvironmentList() {
 
         const meta = document.createElement("div");
         meta.className = "environment-item__meta";
-        meta.textContent = environment.rules?.[0]?.value || t("noUrlRules");
+        meta.textContent = environment.homepageUrl || environment.rules?.[0]?.value || t("noUrlRules");
 
         button.append(name, meta);
         button.addEventListener("click", () => selectEnvironment(group.id, environment.id));
@@ -1948,9 +2023,11 @@ function renderForm() {
   if (!environment) return;
 
   isRendering = true;
+  clearBasicValidationError();
   renderGroupOptions();
   nodes.name.value = environment.name;
   nodes.group.value = ensureGroupId(environment.groupId, settings.groups);
+  nodes.homepageUrl.value = environment.homepageUrl || "";
   nodes.badge.value = environment.badge || environment.name || "";
   nodes.badgeEnabled.checked = environment.badgeEnabled !== false;
   nodes.watermarkEnabled.checked = environment.watermarkEnabled === true;
@@ -2066,6 +2143,8 @@ function addEnvironment(groupId = selectedGroupId || DEFAULT_GROUP_ID) {
     id: uid("env"),
     groupId: ensureGroupId(targetGroupId, settings.groups),
     name,
+    homepageUrl: "",
+    lastQuickAccessAt: 0,
     enabled: true,
     badge: name,
     badgeEnabled: true,
@@ -2128,6 +2207,7 @@ async function deleteEnvironment() {
 }
 
 async function saveSettings() {
+  clearBasicValidationError();
   const emptyAccount = findEmptyAccount();
   if (emptyAccount) {
     selectedGroupId = emptyAccount.environment.groupId;
@@ -2136,14 +2216,24 @@ async function saveSettings() {
     showAccountsValidationError(t("emptyAccountError"));
     return;
   }
+  const invalidHomepageEnvironment = findInvalidHomepageEnvironment();
+  if (invalidHomepageEnvironment) {
+    selectedGroupId = invalidHomepageEnvironment.groupId;
+    selectedId = invalidHomepageEnvironment.id;
+    render();
+    showBasicValidationError(t("invalidEnvironmentUrl"));
+    return;
+  }
   settings = normalizeSettings(settings);
   await persistSettingsSnapshot();
+  clearBasicValidationError();
   clearAccountsValidationError();
   render();
   setStatus(t("saved"));
 }
 
 function exportSettings() {
+  settings = normalizeSettings(settings);
   const exportSettingsSubset = buildSelectedSettings(settings, exportSelectionState);
   const blob = new Blob([JSON.stringify(buildExportSettings(exportSettingsSubset), null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
@@ -2157,6 +2247,7 @@ function exportSettings() {
 }
 
 function applySettings(nextSettings, message) {
+  clearBasicValidationError();
   clearAccountsValidationError();
   settings = normalizeSettings(nextSettings);
   hasUnsavedChanges = message === t("importedSaveToApply") || message === t("sampleLoadedSaveToApply");
@@ -2216,6 +2307,10 @@ bindNodeEvent(nodes.name, "input", () => {
   });
 });
 bindNodeEvent(nodes.group, "change", () => updateSelectedEnvironment({ groupId: nodes.group.value }));
+bindNodeEvent(nodes.homepageUrl, "input", () => {
+  clearBasicValidationError();
+  updateSelectedEnvironment({ homepageUrl: normalizeHomepageUrl(nodes.homepageUrl.value) });
+});
 bindNodeEvent(nodes.badge, "input", () => updateSelectedEnvironment({ badge: nodes.badge.value }));
 bindNodeEvent(nodes.badgeEnabled, "change", () => updateSelectedEnvironment({ badgeEnabled: nodes.badgeEnabled.checked }));
 bindNodeEvent(nodes.watermarkText, "input", () => updateSelectedEnvironment({ watermarkText: nodes.watermarkText.value }));
@@ -2372,8 +2467,18 @@ bindNodeEvent(nodes.importModalConfirm, "click", async () => {
   if (!importPreviewSettings || !importSelectionState) return;
   const selectedImportSettings = buildSelectedSettings(importPreviewSettings, importSelectionState);
   const merged = mergeImportedSettings(settings, selectedImportSettings);
+  clearBasicValidationError();
   clearAccountsValidationError();
   settings = normalizeSettings(merged);
+  const invalidHomepageEnvironment = findInvalidHomepageEnvironment();
+  if (invalidHomepageEnvironment) {
+    selectedGroupId = invalidHomepageEnvironment.groupId;
+    selectedId = invalidHomepageEnvironment.id;
+    render();
+    showBasicValidationError(t("invalidEnvironmentUrl"));
+    closeImportModal();
+    return;
+  }
   selectedGroupId = settings.groups[0]?.id || DEFAULT_GROUP_ID;
   selectedId = settings.environments.find((environment) => environment.groupId === selectedGroupId)?.id || settings.environments[0]?.id || null;
   await persistSettingsSnapshot();

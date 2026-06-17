@@ -970,6 +970,10 @@ button:hover,
   gap: 5px;
 }
 
+.field--full {
+  grid-column: 1 / -1;
+}
+
 .badge-layout {
   display: grid;
   gap: 12px;

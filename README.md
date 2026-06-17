@@ -20,6 +20,7 @@
 - Manage grouped environments from a dedicated options page.
 - Store multiple test accounts per environment and fill them on demand.
 - Show the matched environment directly in the extension popup.
+- Add an environment homepage URL so the popup can jump straight to grouped environment entries.
 
 ## Install from Chrome Web Store
 
