@@ -860,6 +860,18 @@ button:hover,
   border-style: dashed;
 }
 
+.environment-item.is-drop-before {
+  box-shadow:
+    0 -3px 0 0 #60a5fa,
+    0 0 0 1px rgba(96, 165, 250, 0.2);
+}
+
+.environment-item.is-drop-after {
+  box-shadow:
+    0 3px 0 0 #60a5fa,
+    0 0 0 1px rgba(96, 165, 250, 0.2);
+}
+
 .environment-item__status {
   display: inline-flex;
   align-items: center;

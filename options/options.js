@@ -731,7 +731,16 @@ function clearEnvironmentDropIndicators() {
     group.classList.remove("is-drop-target");
   });
   nodes.list.querySelectorAll(".environment-item").forEach((item) => {
-    item.classList.remove("is-drag-source");
+    item.classList.remove("is-drag-source", "is-drop-before", "is-drop-after");
+  });
+}
+
+function setEnvironmentDropIndicator(targetItem, placement) {
+  if (!nodes.list) return;
+  nodes.list.querySelectorAll(".environment-item").forEach((item) => {
+    const isTarget = item === targetItem;
+    item.classList.toggle("is-drop-before", isTarget && placement === "before");
+    item.classList.toggle("is-drop-after", isTarget && placement === "after");
   });
 }
 
@@ -761,6 +770,20 @@ function moveEnvironmentToGroup(environmentId, groupId) {
   const environment = settings.environments.find((item) => item.id === environmentId);
   if (!environment || environment.groupId === groupId) return false;
   environment.groupId = ensureGroupId(groupId, settings.groups);
+  return true;
+}
+
+function reorderEnvironments(sourceId, targetId, placement, nextGroupId) {
+  const environments = settings.environments || [];
+  const sourceIndex = environments.findIndex((environment) => environment.id === sourceId);
+  const targetIndex = environments.findIndex((environment) => environment.id === targetId);
+  if (sourceIndex < 0 || targetIndex < 0 || sourceId === targetId) return false;
+
+  const [movedEnvironment] = environments.splice(sourceIndex, 1);
+  movedEnvironment.groupId = ensureGroupId(nextGroupId || movedEnvironment.groupId, settings.groups);
+  const adjustedTargetIndex = sourceIndex < targetIndex ? targetIndex - 1 : targetIndex;
+  const insertIndex = placement === "after" ? adjustedTargetIndex + 1 : adjustedTargetIndex;
+  environments.splice(insertIndex, 0, movedEnvironment);
   return true;
 }
 
@@ -1591,15 +1614,11 @@ function renderEnvironmentList() {
     const stack = document.createElement("div");
     stack.className = "environment-group__list";
 
-    const acceptEnvironmentDrop = async (event) => {
-      if (!draggingEnvironmentId) return;
-      event.preventDefault();
-      event.stopPropagation();
-      const movedEnvironmentId = draggingEnvironmentId;
-      const didMove = moveEnvironmentToGroup(movedEnvironmentId, group.id);
+    const groupEnvironments = settings.environments.filter((environment) => environment.groupId === group.id);
+
+    const persistEnvironmentMove = async (movedEnvironmentId) => {
       draggingEnvironmentId = "";
       clearEnvironmentDropIndicators();
-      if (!didMove) return;
       selectedGroupId = group.id;
       selectedId = movedEnvironmentId;
       await persistSettingsSnapshot();
@@ -1607,12 +1626,79 @@ function renderEnvironmentList() {
       setStatus(t("saved"));
     };
 
+    const inferGroupEdgeDropTarget = (clientY) => {
+      if (!groupEnvironments.length) return null;
+      const firstItem = stack.querySelector(".environment-item");
+      const lastItem = stack.querySelector(".environment-item:last-of-type");
+      if (!firstItem || !lastItem) return null;
+      const firstRect = firstItem.getBoundingClientRect();
+      const lastRect = lastItem.getBoundingClientRect();
+      if (clientY <= firstRect.top + firstRect.height / 2) {
+        return { targetId: groupEnvironments[0].id, placement: "before", targetItem: firstItem };
+      }
+      if (clientY >= lastRect.top + lastRect.height / 2) {
+        return {
+          targetId: groupEnvironments[groupEnvironments.length - 1].id,
+          placement: "after",
+          targetItem: lastItem
+        };
+      }
+      return null;
+    };
+
+    const inferActiveEnvironmentDropTarget = () => {
+      const activeBefore = stack.querySelector(".environment-item.is-drop-before");
+      if (activeBefore?.dataset.environmentId) {
+        return {
+          targetId: activeBefore.dataset.environmentId,
+          placement: "before",
+          targetItem: activeBefore
+        };
+      }
+      const activeAfter = stack.querySelector(".environment-item.is-drop-after");
+      if (activeAfter?.dataset.environmentId) {
+        return {
+          targetId: activeAfter.dataset.environmentId,
+          placement: "after",
+          targetItem: activeAfter
+        };
+      }
+      return null;
+    };
+
+    const acceptEnvironmentDrop = async (event) => {
+      if (!draggingEnvironmentId) return;
+      event.preventDefault();
+      event.stopPropagation();
+      const movedEnvironmentId = draggingEnvironmentId;
+      const draggedEnvironment = settings.environments.find((environment) => environment.id === movedEnvironmentId);
+      const sameGroup = draggedEnvironment?.groupId === group.id;
+      if (sameGroup) {
+        const target = inferActiveEnvironmentDropTarget() || inferGroupEdgeDropTarget(event.clientY);
+        if (!target) return;
+        const didReorder = reorderEnvironments(movedEnvironmentId, target.targetId, target.placement, group.id);
+        if (!didReorder) return;
+        await persistEnvironmentMove(movedEnvironmentId);
+        return;
+      }
+      const didMove = moveEnvironmentToGroup(movedEnvironmentId, group.id);
+      if (!didMove) return;
+      await persistEnvironmentMove(movedEnvironmentId);
+    };
+
     wrap.addEventListener("dragover", (event) => {
       if (!draggingEnvironmentId) return;
       const draggedEnvironment = settings.environments.find((environment) => environment.id === draggingEnvironmentId);
-      if (!draggedEnvironment || draggedEnvironment.groupId === group.id) return;
+      if (!draggedEnvironment) return;
       event.preventDefault();
       if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+      if (draggedEnvironment.groupId === group.id) {
+        const edgeTarget = inferGroupEdgeDropTarget(event.clientY);
+        if (!edgeTarget) return;
+        wrap.classList.remove("is-drop-target");
+        setEnvironmentDropIndicator(edgeTarget.targetItem, edgeTarget.placement);
+        return;
+      }
       clearEnvironmentDropIndicators();
       wrap.classList.add("is-drop-target");
     });
@@ -1626,8 +1712,6 @@ function renderEnvironmentList() {
     wrap.addEventListener("drop", acceptEnvironmentDrop);
     stack.addEventListener("drop", acceptEnvironmentDrop);
 
-    const groupEnvironments = settings.environments.filter((environment) => environment.groupId === group.id);
-
     if (!groupEnvironments.length) {
       const empty = document.createElement("div");
       empty.className = "empty empty--compact";
@@ -1638,6 +1722,7 @@ function renderEnvironmentList() {
         const button = document.createElement("button");
         button.type = "button";
         button.className = "environment-item";
+        button.dataset.environmentId = environment.id;
         button.draggable = true;
         button.classList.toggle("is-active", environment.id === selectedId);
         button.classList.toggle("is-disabled", environment.enabled === false);
@@ -1680,6 +1765,26 @@ function renderEnvironmentList() {
         button.addEventListener("dragend", () => {
           draggingEnvironmentId = "";
           clearEnvironmentDropIndicators();
+        });
+        button.addEventListener("dragover", (event) => {
+          if (!draggingEnvironmentId || draggingEnvironmentId === environment.id) return;
+          event.preventDefault();
+          event.stopPropagation();
+          wrap.classList.remove("is-drop-target");
+          const rect = button.getBoundingClientRect();
+          const placement = event.clientY < rect.top + rect.height / 2 ? "before" : "after";
+          setEnvironmentDropIndicator(button, placement);
+          if (event.dataTransfer) event.dataTransfer.dropEffect = "move";
+        });
+        button.addEventListener("drop", async (event) => {
+          if (!draggingEnvironmentId || draggingEnvironmentId === environment.id) return;
+          event.preventDefault();
+          event.stopPropagation();
+          const movedEnvironmentId = draggingEnvironmentId;
+          const placement = button.classList.contains("is-drop-after") ? "after" : "before";
+          const didMove = reorderEnvironments(movedEnvironmentId, environment.id, placement, group.id);
+          if (!didMove) return;
+          await persistEnvironmentMove(movedEnvironmentId);
         });
         stack.append(button);
       });
