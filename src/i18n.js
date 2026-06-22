@@ -103,8 +103,25 @@
     return localeChoice;
   }
 
-  window.envmateI18n = { t, localizeDocument, setLocaleChoice, getLocaleChoice };
-  document.addEventListener("DOMContentLoaded", async () => {
-    await setLocaleChoice(localeChoice, { persist: false });
+  const ready = new Promise((resolve) => {
+    const initializeLocale = async () => {
+      try {
+        await setLocaleChoice(localeChoice, { persist: false });
+      } catch (_) {
+        localeChoice = "auto";
+        localeMessages = null;
+        localizeDocument();
+      } finally {
+        resolve();
+      }
+    };
+
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", initializeLocale, { once: true });
+    } else {
+      initializeLocale();
+    }
   });
+
+  window.envmateI18n = { t, localizeDocument, setLocaleChoice, getLocaleChoice, ready };
 })();

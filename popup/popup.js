@@ -405,6 +405,27 @@ function renderEnvironment() {
   renderAccounts();
 }
 
+function releaseDynamicI18nPlaceholders() {
+  [currentUrlNode, environmentNameNode].forEach((node) => {
+    node.removeAttribute("data-i18n");
+  });
+}
+
+function renderUnavailableState() {
+  currentTab = null;
+  settings = settings || { environments: [] };
+  currentUrlNode.textContent = t("noActiveTab");
+  quickAddEnvironmentNode.hidden = true;
+  environmentCardNode.style.borderColor = "";
+  environmentCardNode.classList.add("environment-card--empty");
+  popupNode.classList.add("is-unmatched");
+  environmentToggleNode.hidden = true;
+  accountsSectionNode.hidden = true;
+  environmentNameNode.textContent = t("noMatch");
+  environmentMetaNode.textContent = "";
+  renderFavorites();
+}
+
 function renderAccounts() {
   accountsNode.innerHTML = "";
   const accounts = currentEnvironment?.accounts || [];
@@ -452,6 +473,8 @@ function renderAccounts() {
 }
 
 async function init() {
+  await window.envmateI18n.ready;
+  releaseDynamicI18nPlaceholders();
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   currentTab = tab;
 
@@ -478,4 +501,6 @@ favoritesMoreNode.addEventListener("click", () => {
 });
 
 decoratePopupButtons();
-init();
+init().catch(() => {
+  renderUnavailableState();
+});
