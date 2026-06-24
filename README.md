@@ -30,6 +30,13 @@
 
 Many internal systems look nearly identical across dev, test, pre-release, and production. EnvMate adds lightweight visual signals so you can tell where you are before you click, edit, or submit anything important.
 
+## Changelog / 更新
+
+- 2026-06-18 · v0.2.1: Improved drag reordering for environments in grouped settings.
+- 2026-06-18 · v0.2.1：优化配置分组内环境的拖拽排序。
+- 2026-06-17 · v0.2.0: Added Quick Access.
+- 2026-06-17 · v0.2.0：新增 Quick Access。
+
 ## URL Rule Types
 
 - `wildcard`: supports `*`, for example `https://test.example.com/*`
@@ -85,3 +92,7 @@ The most important part of each environment is its `URL Rules`, because those ru
 - `make crx KEY=path/to/key.pem`: reuse an existing signing key
 
 If `KEY` is not provided, Chrome creates a new private key in `.keys/`, which changes the extension identity. Do not commit files in `.keys/`.
+
+## Friendly Links
+
+- [linux.do](https://linux.do/) - Where possible begins
