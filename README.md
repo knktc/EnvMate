@@ -32,6 +32,8 @@ Many internal systems look nearly identical across dev, test, pre-release, and p
 
 ## Changelog / 更新
 
+- 2026-07-06 · v0.2.3: Quick Access now follows the configured environment order instead of recent visits.
+- 2026-07-06 · v0.2.3：快速访问改为按配置中的环境顺序排列，不再按最近访问排序。
 - 2026-06-18 · v0.2.1: Improved drag reordering for environments in grouped settings.
 - 2026-06-18 · v0.2.1：优化配置分组内环境的拖拽排序。
 - 2026-06-17 · v0.2.0: Added Quick Access.

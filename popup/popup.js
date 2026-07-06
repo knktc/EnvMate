@@ -122,11 +122,6 @@ function homepageUrl(environment) {
   return String(environment?.homepageUrl || "").trim();
 }
 
-function quickAccessTimestamp(environment) {
-  const nextValue = Number(environment?.lastQuickAccessAt ?? 0);
-  return Number.isFinite(nextValue) && nextValue > 0 ? nextValue : 0;
-}
-
 function accountDisplayLabel(account) {
   const username = String(account?.username || "").trim();
   const label = String(account?.label || "").trim();
@@ -213,16 +208,7 @@ function groupedFavoriteEnvironments(config) {
     .map((entry) => ({
       ...entry,
       environments: entry.environments
-        .sort((left, right) => {
-          const leftTimestamp = quickAccessTimestamp(left.environment);
-          const rightTimestamp = quickAccessTimestamp(right.environment);
-          if (leftTimestamp && rightTimestamp && leftTimestamp !== rightTimestamp) {
-            return rightTimestamp - leftTimestamp;
-          }
-          if (leftTimestamp && !rightTimestamp) return -1;
-          if (!leftTimestamp && rightTimestamp) return 1;
-          return left.originalIndex - right.originalIndex;
-        })
+        .sort((left, right) => left.originalIndex - right.originalIndex)
         .map((item) => item.environment)
     }))
     .filter((entry) => entry.environments.length);
