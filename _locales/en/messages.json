@@ -114,6 +114,8 @@
   "sampleEnvironmentDev": { "message": "Development Sample" },
   "exportDialogTitle": { "message": "Export Data" },
   "exportDialogHint": { "message": "Choose groups first. Expand a group if you want to select environments individually." },
+  "exportIncludeTestAccounts": { "message": "Include test accounts" },
+  "exportSecurityNotice": { "message": "Security notice: test account passwords are not strongly encrypted. Protect this export carefully." },
   "exportSelectedCount": {
     "message": "Export $COUNT$ environments",
     "placeholders": {

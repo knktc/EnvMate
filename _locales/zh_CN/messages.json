@@ -112,6 +112,8 @@
   "sampleEnvironmentDev": { "message": "开发环境" },
   "exportDialogTitle": { "message": "导出数据" },
   "exportDialogHint": { "message": "先按分组选择；如果需要更细，可以展开分组单独勾选环境。" },
+  "exportIncludeTestAccounts": { "message": "包含测试账号" },
+  "exportSecurityNotice": { "message": "安全提示：测试账号密码未进行强力加密，请妥善保护导出的配置文件。" },
   "exportSelectedCount": {
     "message": "导出 $COUNT$ 个环境",
     "placeholders": {

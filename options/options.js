@@ -142,6 +142,8 @@ const nodes = {
   exportModalCancel: document.querySelector("#export-modal-cancel"),
   exportModalConfirm: document.querySelector("#export-modal-confirm"),
   exportSelectionList: document.querySelector("#export-selection-list"),
+  exportIncludeTestAccounts: document.querySelector("#export-include-test-accounts"),
+  exportSecurityNotice: document.querySelector("#export-security-notice"),
   importModal: document.querySelector("#import-modal"),
   importModalClose: document.querySelector("#import-modal-close"),
   importModalCancel: document.querySelector("#import-modal-cancel"),
@@ -261,16 +263,20 @@ function revealImportedPassword(value) {
   }
 }
 
-function buildExportSettings(sourceSettings = settings) {
+function buildExportSettings(sourceSettings = settings, includeTestAccounts = false) {
   const next = clone(sourceSettings);
-  next.environments = (next.environments || []).map((environment) => ({
+  next.environments = (next.environments || []).map(({ accounts, ...environment }) => ({
     ...environment,
-    accounts: Array.isArray(environment.accounts)
-      ? environment.accounts.map((account) => ({
-          ...account,
-          password: obfuscateExportedPassword(account.password || "")
-        }))
-      : []
+    ...(includeTestAccounts
+      ? {
+          accounts: Array.isArray(accounts)
+            ? accounts.map(({ password, ...account }) => ({
+                ...account,
+                password: obfuscateExportedPassword(password || "")
+              }))
+            : []
+        }
+      : {})
   }));
   return next;
 }
@@ -616,13 +622,19 @@ function syncExportModalState() {
   renderSelectionTree(nodes.exportSelectionList, groups, exportSelectionState, {
     onChange: syncExportModalState
   });
+  syncExportSecurityNotice();
   const selectedCount = selectedEnvironmentTotal(groups, exportSelectionState);
   nodes.exportModalConfirm.disabled = selectedCount === 0;
   nodes.exportModalConfirm.textContent = t("exportSelectedCount", [String(selectedCount)]);
 }
 
+function syncExportSecurityNotice() {
+  nodes.exportSecurityNotice.hidden = !nodes.exportIncludeTestAccounts.checked;
+}
+
 function openExportModal() {
   exportSelectionState = createSelectionState(groupedEnvironments(settings));
+  nodes.exportIncludeTestAccounts.checked = false;
   syncExportModalState();
   setModalOpen("export", true);
 }
@@ -2340,7 +2352,10 @@ async function saveSettings() {
 function exportSettings() {
   settings = normalizeSettings(settings);
   const exportSettingsSubset = buildSelectedSettings(settings, exportSelectionState);
-  const blob = new Blob([JSON.stringify(buildExportSettings(exportSettingsSubset), null, 2)], { type: "application/json" });
+  const blob = new Blob(
+    [JSON.stringify(buildExportSettings(exportSettingsSubset, nodes.exportIncludeTestAccounts.checked), null, 2)],
+    { type: "application/json" }
+  );
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
@@ -2544,6 +2559,7 @@ bindNodeEvent(nodes.aboutTrigger, "click", openAboutModal);
 bindNodeEvent(nodes.exportModalClose, "click", closeExportModal);
 bindNodeEvent(nodes.exportModalCancel, "click", closeExportModal);
 bindNodeEvent(nodes.exportModalConfirm, "click", exportSettings);
+bindNodeEvent(nodes.exportIncludeTestAccounts, "change", syncExportSecurityNotice);
 
 bindNodeEvent(nodes.importConfigTrigger, "click", openImportModal);
 bindNodeEvent(nodes.importModalClose, "click", closeImportModal);

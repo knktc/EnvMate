@@ -305,6 +305,19 @@
             <button id="export-modal-close" class="group-icon-button" type="button" aria-label="Close">x</button>
           </div>
           <div id="export-selection-list" class="selection-tree"></div>
+          <label class="toggle-control export-password-option">
+            <input id="export-include-test-accounts" type="checkbox" />
+            <span class="toggle-control__switch" aria-hidden="true"></span>
+            <span data-i18n="exportIncludeTestAccounts">Include test accounts</span>
+          </label>
+          <div id="export-security-notice" class="export-security-notice" role="alert" hidden>
+            <svg class="export-security-notice__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path d="M12 3 2.9 19.1A2 2 0 0 0 4.64 22h14.72a2 2 0 0 0 1.74-2.9L12 3Z" />
+              <path d="M12 9v4" />
+              <path d="M12 17h.01" />
+            </svg>
+            <span data-i18n="exportSecurityNotice">Security notice: test account passwords are not strongly encrypted. Protect this export carefully.</span>
+          </div>
           <div class="selection-modal__footer">
             <button id="export-modal-cancel" type="button" data-i18n="cancel">Cancel</button>
             <button id="export-modal-confirm" class="primary" type="button" data-i18n="exportSelected">Export Selected</button>

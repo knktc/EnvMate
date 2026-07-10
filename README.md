@@ -32,6 +32,8 @@ Many internal systems look nearly identical across dev, test, pre-release, and p
 
 ## Changelog / 更新
 
+- 2026-07-10 · v0.2.4: Added optional test-account export with a password-security notice.
+- 2026-07-10 · v0.2.4：导出时可选择包含测试账号，并增加密码安全提示。
 - 2026-07-06 · v0.2.3: Quick Access now follows the configured environment order instead of recent visits.
 - 2026-07-06 · v0.2.3：快速访问改为按配置中的环境顺序排列，不再按最近访问排序。
 - 2026-06-18 · v0.2.1: Improved drag reordering for environments in grouped settings.
