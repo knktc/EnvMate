@@ -32,6 +32,8 @@ Many internal systems look nearly identical across dev, test, pre-release, and p
 
 ## Changelog / 更新
 
+- 2026-07-20 · v0.3.0: Added URL-based configuration import with saved import scopes and one-click re-import.
+- 2026-07-20 · v0.3.0：新增通过 URL 导入配置，支持保存导入范围和一键重新导入。
 - 2026-07-10 · v0.2.4: Added optional test-account export with a password-security notice.
 - 2026-07-10 · v0.2.4：导出时可选择包含测试账号，并增加密码安全提示。
 - 2026-07-06 · v0.2.3: Quick Access now follows the configured environment order instead of recent visits.

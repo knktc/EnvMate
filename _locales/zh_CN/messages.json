@@ -103,7 +103,7 @@
   "confirmUnsavedSwitch": { "message": "当前配置有未保存修改。继续切换会放弃这些修改，确定继续吗？" },
   "exported": { "message": "已导出" },
   "importedSaveToApply": { "message": "已导入，点击保存后生效。" },
-  "importedApplied": { "message": "已导入并生效。" },
+  "importedApplied": { "message": "导入成功" },
   "sampleLoadedSaveToApply": { "message": "示例已加载，点击保存后生效。" },
   "sampleLoaded": { "message": "示例已加载并生效。" },
   "sampleAlreadyLoaded": { "message": "示例分组已存在，已为你切换过去。" },
@@ -121,7 +121,47 @@
     }
   },
   "importDialogTitle": { "message": "导入数据" },
-  "importDialogHint": { "message": "选择文件或直接拖进来，解析后再勾选要导入的分组和环境。" },
+  "importDialogHint": { "message": "选择文件或加载配置 URL，再勾选要导入的分组和环境。" },
+  "importFileHint": { "message": "选择文件或直接拖进来，解析后再勾选要导入的分组和环境。" },
+  "importFromFile": { "message": "文件导入" },
+  "importFromUrl": { "message": "URL 导入" },
+  "urlImportDialogHint": { "message": "输入配置 URL，加载后选择导入范围。" },
+  "urlImportAddress": { "message": "配置 URL" },
+  "urlImportHelp": { "message": "支持 EnvMate 导出的 JSON。" },
+  "urlImportConfigured": { "message": "已配置" },
+  "urlImportChange": { "message": "修改配置" },
+  "urlImportReload": { "message": "重新导入" },
+  "urlImportScope": { "message": "导入范围" },
+  "urlImportScopeAll": { "message": "全部分组" },
+  "urlImportScopeSelected": { "message": "选择分组" },
+  "urlImportScopeAllHint": { "message": "自动包含新增分组" },
+  "urlImportScopeSelectedHint": { "message": "仅导入勾选内容" },
+  "urlImportLastImported": { "message": "上次成功导入" },
+  "urlImportRemove": { "message": "删除 URL 配置" },
+  "urlImportLoad": { "message": "加载配置" },
+  "urlImportLoading": { "message": "正在加载..." },
+  "urlImportInvalidUrl": { "message": "请输入合法的 HTTP 或 HTTPS 配置地址。" },
+  "urlImportHttpError": {
+    "message": "加载失败：服务器返回 HTTP $STATUS$。",
+    "placeholders": {
+      "status": { "content": "$1" }
+    }
+  },
+  "urlImportNoData": { "message": "这个配置中没有可导入的分组和环境。" },
+  "urlImportInvalidJson": { "message": "加载失败：返回内容不是有效的 JSON。" },
+  "urlImportInvalidConfig": { "message": "加载失败：返回内容不是有效的 EnvMate 配置。" },
+  "urlImportRequestFailed": { "message": "加载失败：无法连接到该地址。请检查 SSL 证书、域名、服务器或网络。" },
+  "urlImportNever": { "message": "尚未导入" },
+  "urlImportNoScope": { "message": "尚未选择导入范围" },
+  "urlImportWholeGroup": { "message": "全部" },
+  "urlImportEnvironmentCount": {
+    "message": "$COUNT$ 个环境",
+    "placeholders": {
+      "count": { "content": "$1" }
+    }
+  },
+  "urlImportConfirmRemove": { "message": "确定删除这个 URL 配置吗？已经导入的本地数据会保留。" },
+  "urlImportRemoved": { "message": "URL 配置已删除，本地数据已保留。" },
   "aboutDialogTitle": { "message": "支持 EnvMate" },
   "aboutContactTitle": { "message": "联系信息" },
   "aboutContactBody": { "message": "EnvMate 已经开源，项目托管在 GitHub，欢迎提交 PR。如果你在使用过程中遇到任何问题，也欢迎直接给我发邮件。" },

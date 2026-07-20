@@ -105,7 +105,7 @@
   "confirmUnsavedSwitch": { "message": "You have unsaved changes. Continuing will discard them. Continue switching?" },
   "exported": { "message": "Exported" },
   "importedSaveToApply": { "message": "Imported. Click Save to apply." },
-  "importedApplied": { "message": "Imported and applied." },
+  "importedApplied": { "message": "Import successful" },
   "sampleLoadedSaveToApply": { "message": "Sample loaded. Click Save to apply." },
   "sampleLoaded": { "message": "Sample loaded and applied." },
   "sampleAlreadyLoaded": { "message": "Sample group already exists. Switched to it." },
@@ -123,7 +123,47 @@
     }
   },
   "importDialogTitle": { "message": "Import Data" },
-  "importDialogHint": { "message": "Choose a file or drop it here, then select which groups and environments to import." },
+  "importDialogHint": { "message": "Choose a file or load a configuration URL, then select which groups and environments to import." },
+  "importFileHint": { "message": "Choose a file or drop it here, then select which groups and environments to import." },
+  "importFromFile": { "message": "From File" },
+  "importFromUrl": { "message": "From URL" },
+  "urlImportDialogHint": { "message": "Enter a configuration URL, then choose the import scope." },
+  "urlImportAddress": { "message": "Configuration URL" },
+  "urlImportHelp": { "message": "Supports JSON exported by EnvMate." },
+  "urlImportConfigured": { "message": "Configured" },
+  "urlImportChange": { "message": "Edit Configuration" },
+  "urlImportReload": { "message": "Import Again" },
+  "urlImportScope": { "message": "Import scope" },
+  "urlImportScopeAll": { "message": "All groups" },
+  "urlImportScopeSelected": { "message": "Selected groups" },
+  "urlImportScopeAllHint": { "message": "Includes new groups automatically" },
+  "urlImportScopeSelectedHint": { "message": "Checked items only" },
+  "urlImportLastImported": { "message": "Last successful import" },
+  "urlImportRemove": { "message": "Remove URL configuration" },
+  "urlImportLoad": { "message": "Load Configuration" },
+  "urlImportLoading": { "message": "Loading..." },
+  "urlImportInvalidUrl": { "message": "Enter a valid HTTP or HTTPS configuration URL." },
+  "urlImportHttpError": {
+    "message": "Load failed: the server returned HTTP $STATUS$.",
+    "placeholders": {
+      "status": { "content": "$1" }
+    }
+  },
+  "urlImportNoData": { "message": "This configuration has no importable groups or environments." },
+  "urlImportInvalidJson": { "message": "Load failed: the response is not valid JSON." },
+  "urlImportInvalidConfig": { "message": "Load failed: the response is not a valid EnvMate configuration." },
+  "urlImportRequestFailed": { "message": "Load failed: unable to connect. Check the SSL certificate, domain, server, or network." },
+  "urlImportNever": { "message": "Not imported yet" },
+  "urlImportNoScope": { "message": "No import scope selected" },
+  "urlImportWholeGroup": { "message": "All" },
+  "urlImportEnvironmentCount": {
+    "message": "$COUNT$ environments",
+    "placeholders": {
+      "count": { "content": "$1" }
+    }
+  },
+  "urlImportConfirmRemove": { "message": "Remove this URL configuration? Previously imported local data will be kept." },
+  "urlImportRemoved": { "message": "URL configuration removed. Local data was kept." },
   "aboutDialogTitle": { "message": "Support EnvMate" },
   "aboutContactTitle": { "message": "Contact" },
   "aboutContactBody": { "message": "EnvMate is open source. The project lives on GitHub, and pull requests are always welcome. If you run into any issues, feel free to email me directly." },

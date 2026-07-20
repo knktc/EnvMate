@@ -1,4 +1,5 @@
 const STORAGE_KEY = "envmateSettings";
+const URL_IMPORT_CONFIG_KEY = "envmateUrlImportConfig";
 const DEFAULT_GROUP_ID = "default";
 const SAMPLE_GROUP_ID = "sample";
 const ENVIRONMENT_COLOR_PRESETS = ["#2563eb", "#059669", "#dc2626", "#7c3aed", "#ea580c", "#0f766e", "#db2777", "#4f46e5"];
@@ -148,9 +149,31 @@ const nodes = {
   importModalClose: document.querySelector("#import-modal-close"),
   importModalCancel: document.querySelector("#import-modal-cancel"),
   importModalConfirm: document.querySelector("#import-modal-confirm"),
+  importModalHint: document.querySelector("#import-modal-hint"),
+  importTabFile: document.querySelector("#import-tab-file"),
+  importTabUrl: document.querySelector("#import-tab-url"),
+  importFilePanel: document.querySelector("#import-file-panel"),
+  importUrlPanel: document.querySelector("#import-url-panel"),
   importSelectionList: document.querySelector("#import-selection-list"),
   importDropzone: document.querySelector("#import-dropzone"),
   importDropzoneDetail: document.querySelector("#import-dropzone-detail"),
+  urlImportEditor: document.querySelector("#url-import-editor"),
+  urlImportInput: document.querySelector("#url-import-input"),
+  urlImportError: document.querySelector("#url-import-error"),
+  urlImportConfigured: document.querySelector("#url-import-configured"),
+  urlImportConfiguredError: document.querySelector("#url-import-configured-error"),
+  urlImportSavedUrl: document.querySelector("#url-import-saved-url"),
+  urlImportSavedGroups: document.querySelector("#url-import-saved-groups"),
+  urlImportLastImported: document.querySelector("#url-import-last-imported"),
+  urlImportChange: document.querySelector("#url-import-change"),
+  urlImportReload: document.querySelector("#url-import-reload"),
+  urlImportRemove: document.querySelector("#url-import-remove"),
+  urlImportScopeMode: document.querySelector("#url-import-scope-mode"),
+  urlImportScopeAll: document.querySelector("#url-import-scope-all"),
+  urlImportScopeSelected: document.querySelector("#url-import-scope-selected"),
+  urlImportScopeNote: document.querySelector("#url-import-scope-note"),
+  importSuccessToast: document.querySelector("#import-success-toast"),
+  importSuccessToastMessage: document.querySelector("#import-success-toast-message"),
   aboutModal: document.querySelector("#about-modal"),
   aboutModalClose: document.querySelector("#about-modal-close"),
   aboutModalConfirm: document.querySelector("#about-modal-confirm"),
@@ -173,7 +196,16 @@ let draggingEnvironmentId = "";
 let exportSelectionState = null;
 let importPreviewSettings = null;
 let importSelectionState = null;
+let importMethod = "file";
+let importPreviewSource = "";
+let urlImportConfig = null;
+let urlImportView = "editor";
+let urlImportLoadedUrl = "";
+let urlImportLoading = false;
+let urlImportErrorMessage = "";
+let urlImportScopeMode = "all";
 let activeModalName = "";
+let importSuccessToastTimer = 0;
 
 function syncLocaleSwitcher() {
   if (!nodes.localeSwitcher || !window.envmateI18n?.getLocaleChoice) return;
@@ -318,6 +350,60 @@ function createSelectionState(groups) {
     });
   });
   return state;
+}
+
+function normalizeUrlImportConfig(value) {
+  if (!value || typeof value !== "object") return null;
+  const url = String(value.url || "").trim();
+  if (!url) return null;
+  const selections = Array.isArray(value.selections)
+    ? value.selections
+        .map((selection) => ({
+          groupId: String(selection?.groupId || ""),
+          groupName: String(selection?.groupName || ""),
+          environmentIds: Array.isArray(selection?.environmentIds)
+            ? selection.environmentIds.map((id) => String(id)).filter(Boolean)
+            : null
+        }))
+        .filter((selection) => selection.groupId)
+    : [];
+  return {
+    version: 1,
+    url,
+    scopeMode: value.scopeMode === "all" ? "all" : "selected",
+    selections,
+    lastImportedAt: Number(value.lastImportedAt || 0)
+  };
+}
+
+function createSelectionStateFromSaved(groups, selections) {
+  const state = { groups: {}, environments: {}, expanded: {} };
+  const savedByGroupId = new Map((selections || []).map((selection) => [selection.groupId, selection]));
+
+  groups.forEach((group) => {
+    state.expanded[group.id] = false;
+    const saved = savedByGroupId.get(group.id);
+    const savedEnvironmentIds = new Set(saved?.environmentIds || []);
+    group.environments.forEach((environment) => {
+      state.environments[environment.id] = Boolean(saved && (saved.environmentIds === null || savedEnvironmentIds.has(environment.id)));
+    });
+  });
+
+  return state;
+}
+
+function buildUrlImportSelections(sourceSettings, selectionState) {
+  return groupedEnvironments(sourceSettings).flatMap((group) => {
+    const selectedEnvironmentIds = group.environments
+      .filter((environment) => selectionState.environments[environment.id] !== false)
+      .map((environment) => environment.id);
+    if (!selectedEnvironmentIds.length) return [];
+    return [{
+      groupId: group.id,
+      groupName: group.name,
+      environmentIds: selectedEnvironmentIds.length === group.environments.length ? null : selectedEnvironmentIds
+    }];
+  });
 }
 
 function selectedEnvironmentCount(group, selectionState) {
@@ -546,6 +632,23 @@ function setStatus(message, isError = false) {
   nodes.status.style.color = isError ? "#dc2626" : "#64748b";
 }
 
+function showImportSuccess() {
+  window.clearTimeout(importSuccessToastTimer);
+  nodes.importSuccessToastMessage.textContent = t("importedApplied");
+  nodes.importSuccessToast.hidden = false;
+  window.requestAnimationFrame(() => {
+    nodes.importSuccessToast.classList.add("is-visible");
+  });
+  importSuccessToastTimer = window.setTimeout(() => {
+    nodes.importSuccessToast.classList.remove("is-visible");
+    window.setTimeout(() => {
+      if (!nodes.importSuccessToast.classList.contains("is-visible")) {
+        nodes.importSuccessToast.hidden = true;
+      }
+    }, 180);
+  }, 2500);
+}
+
 async function handleLocaleChange(nextLocale) {
   if (!window.envmateI18n?.setLocaleChoice) return;
   await window.envmateI18n.setLocaleChoice(nextLocale);
@@ -555,11 +658,8 @@ async function handleLocaleChange(nextLocale) {
     syncExportModalState();
   }
   if (activeModalName === "import") {
-    if (importPreviewSettings && importSelectionState) {
-      syncImportModalState();
-    } else {
-      resetImportPreview();
-    }
+    if (importMethod === "file" && !importPreviewSettings) resetFileImportState();
+    syncImportModalState();
   }
   syncAboutModalState();
   setStatus(hasUnsavedChanges ? t("unsavedChanges") : t("ready"));
@@ -643,34 +743,151 @@ function closeExportModal() {
   setModalOpen("export", false);
 }
 
-function resetImportPreview() {
+function clearImportPreview() {
   importPreviewSettings = null;
   importSelectionState = null;
+  importPreviewSource = "";
+}
+
+function resetFileImportState() {
+  clearImportPreview();
   nodes.importSelectionList.classList.add("selection-tree--empty");
   nodes.importSelectionList.innerHTML = `<div class="empty">${t("importNoFile")}</div>`;
   nodes.importDropzoneDetail.textContent = t("importDropzoneHint");
-  nodes.importModalConfirm.disabled = true;
-  nodes.importModalConfirm.textContent = t("importSelectedCount", ["0"]);
+}
+
+function formatUrlImportDate(timestamp) {
+  if (!timestamp) return t("urlImportNever");
+  const locale = isChineseUi() ? "zh-CN" : "en";
+  return new Intl.DateTimeFormat(locale, {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit"
+  }).format(new Date(timestamp));
+}
+
+function renderUrlImportConfiguredState() {
+  if (!urlImportConfig) return;
+  nodes.urlImportSavedUrl.textContent = urlImportConfig.url;
+  nodes.urlImportLastImported.textContent = formatUrlImportDate(urlImportConfig.lastImportedAt);
+  nodes.urlImportSavedGroups.textContent = "";
+
+  if (urlImportConfig.scopeMode === "all") {
+    const item = document.createElement("span");
+    item.className = "url-import-group";
+    const name = document.createElement("span");
+    name.textContent = t("urlImportScopeAll");
+    const detail = document.createElement("span");
+    detail.className = "url-import-group__detail";
+    detail.textContent = t("urlImportScopeAllHint");
+    item.append(name, detail);
+    nodes.urlImportSavedGroups.append(item);
+    return;
+  }
+
+  if (!urlImportConfig.selections.length) {
+    const empty = document.createElement("span");
+    empty.className = "url-import-meta__value";
+    empty.textContent = t("urlImportNoScope");
+    nodes.urlImportSavedGroups.append(empty);
+    return;
+  }
+
+  urlImportConfig.selections.forEach((selection) => {
+    const item = document.createElement("span");
+    item.className = "url-import-group";
+    const name = document.createElement("span");
+    name.textContent = selection.groupName || selection.groupId;
+    const detail = document.createElement("span");
+    detail.className = "url-import-group__detail";
+    detail.textContent = selection.environmentIds === null
+      ? t("urlImportWholeGroup")
+      : t("urlImportEnvironmentCount", [String(selection.environmentIds.length)]);
+    item.append(name, detail);
+    nodes.urlImportSavedGroups.append(item);
+  });
 }
 
 function syncImportModalState() {
-  if (!importPreviewSettings || !importSelectionState) {
-    resetImportPreview();
-    return;
+  const isFile = importMethod === "file";
+  const hasPreview = Boolean(importPreviewSettings && importSelectionState);
+  const isUrlPreview = !isFile && urlImportView === "preview" && hasPreview;
+  const isUrlSaved = !isFile && urlImportView === "saved" && Boolean(urlImportConfig);
+
+  nodes.importTabFile.classList.toggle("is-active", isFile);
+  nodes.importTabFile.setAttribute("aria-selected", String(isFile));
+  nodes.importTabUrl.classList.toggle("is-active", !isFile);
+  nodes.importTabUrl.setAttribute("aria-selected", String(!isFile));
+  nodes.importFilePanel.hidden = !isFile;
+  nodes.importUrlPanel.hidden = isFile;
+  nodes.urlImportEditor.hidden = isFile || isUrlSaved;
+  nodes.urlImportConfigured.hidden = !isUrlSaved;
+  nodes.urlImportScopeMode.hidden = !isUrlPreview;
+  nodes.urlImportScopeAll.checked = urlImportScopeMode === "all";
+  nodes.urlImportScopeSelected.checked = urlImportScopeMode === "selected";
+  nodes.urlImportScopeNote.textContent = t(urlImportScopeMode === "all" ? "urlImportScopeAllHint" : "urlImportScopeSelectedHint");
+  nodes.importSelectionList.hidden = !isFile && (!isUrlPreview || urlImportScopeMode === "all");
+  nodes.importModalHint.textContent = isFile ? t("importFileHint") : t("urlImportDialogHint");
+
+  if (isUrlSaved) renderUrlImportConfiguredState();
+
+  nodes.urlImportInput.disabled = urlImportLoading || isUrlPreview;
+  nodes.urlImportChange.disabled = urlImportLoading;
+  nodes.urlImportReload.disabled = urlImportLoading;
+  nodes.urlImportReload.textContent = urlImportLoading ? t("urlImportLoading") : t("urlImportReload");
+  nodes.urlImportError.hidden = isUrlSaved || !urlImportErrorMessage;
+  nodes.urlImportError.textContent = urlImportErrorMessage;
+  nodes.urlImportConfiguredError.hidden = !isUrlSaved || !urlImportErrorMessage;
+  nodes.urlImportConfiguredError.textContent = urlImportErrorMessage;
+
+  if (hasPreview) {
+    const groups = groupedEnvironments(importPreviewSettings);
+    renderSelectionTree(nodes.importSelectionList, groups, importSelectionState, {
+      onChange: syncImportModalState
+    });
+    nodes.importSelectionList.classList.remove("selection-tree--empty");
+    const selectedCount = urlImportScopeMode === "all" && isUrlPreview
+      ? groups.reduce((total, group) => total + group.environments.length, 0)
+      : selectedEnvironmentTotal(groups, importSelectionState);
+    nodes.importModalConfirm.hidden = false;
+    nodes.importModalConfirm.disabled = selectedCount === 0;
+    nodes.importModalConfirm.textContent = t("importSelectedCount", [String(selectedCount)]);
+  } else if (isFile) {
+    nodes.importModalConfirm.hidden = false;
+    nodes.importModalConfirm.disabled = true;
+    nodes.importModalConfirm.textContent = t("importSelectedCount", ["0"]);
+  } else if (isUrlSaved) {
+    nodes.importModalConfirm.hidden = true;
+  } else {
+    nodes.importModalConfirm.hidden = false;
+    nodes.importModalConfirm.disabled = urlImportLoading || !nodes.urlImportInput.value.trim();
+    nodes.importModalConfirm.textContent = urlImportLoading ? t("urlImportLoading") : t("urlImportLoad");
   }
-  const groups = groupedEnvironments(importPreviewSettings);
-  renderSelectionTree(nodes.importSelectionList, groups, importSelectionState, {
-    onChange: syncImportModalState
-  });
-  nodes.importSelectionList.classList.remove("selection-tree--empty");
-  const selectedCount = selectedEnvironmentTotal(groups, importSelectionState);
-  nodes.importModalConfirm.disabled = selectedCount === 0;
-  nodes.importModalConfirm.textContent = t("importSelectedCount", [String(selectedCount)]);
+
+  nodes.importModalCancel.textContent = isUrlSaved ? t("close") : t("cancel");
+}
+
+function setImportMethod(nextMethod) {
+  importMethod = nextMethod === "url" ? "url" : "file";
+  clearImportPreview();
+  urlImportErrorMessage = "";
+  urlImportLoading = false;
+
+  if (importMethod === "file") {
+    resetFileImportState();
+  } else {
+    urlImportView = urlImportConfig ? "saved" : "editor";
+    urlImportScopeMode = urlImportConfig?.scopeMode || "all";
+    nodes.urlImportInput.value = urlImportConfig?.url || "";
+  }
+  syncImportModalState();
 }
 
 function openImportModal() {
   nodes.importConfig.value = "";
-  resetImportPreview();
+  setImportMethod(urlImportConfig ? "url" : "file");
   setModalOpen("import", true);
 }
 
@@ -684,11 +901,156 @@ async function readImportFile(file) {
     const parsed = decodeImportedSettings(JSON.parse(await file.text()));
     importPreviewSettings = normalizeSettings(parsed);
     importSelectionState = createSelectionState(groupedEnvironments(importPreviewSettings));
+    importPreviewSource = "file";
     nodes.importDropzoneDetail.textContent = file.name;
     syncImportModalState();
   } catch (error) {
-    resetImportPreview();
+    resetFileImportState();
+    syncImportModalState();
     setStatus(error.message, true);
+  }
+}
+
+function normalizeUrlImportUrl(value) {
+  try {
+    const parsed = new URL(String(value || "").trim());
+    if (!["http:", "https:"].includes(parsed.protocol)) throw new Error();
+    return parsed.href;
+  } catch (_) {
+    throw new Error(t("urlImportInvalidUrl"));
+  }
+}
+
+async function loadUrlImportPreview(urlValue, savedSelections = null, savedScopeMode = "all", applyImmediately = false) {
+  let normalizedUrl = "";
+  try {
+    normalizedUrl = normalizeUrlImportUrl(urlValue);
+  } catch (error) {
+    urlImportErrorMessage = error.message;
+    syncImportModalState();
+    return;
+  }
+
+  clearImportPreview();
+  urlImportView = applyImmediately && urlImportConfig ? "saved" : "editor";
+  urlImportLoading = true;
+  urlImportErrorMessage = "";
+  nodes.urlImportInput.value = normalizedUrl;
+  syncImportModalState();
+  try {
+    const response = await fetch(normalizedUrl, { cache: "no-store" });
+    if (!response.ok) {
+      throw new Error(t("urlImportHttpError", [String(response.status)]));
+    }
+    const raw = JSON.parse(await response.text());
+    if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
+      throw new Error(t("urlImportInvalidConfig"));
+    }
+    const parsed = decodeImportedSettings(raw);
+    const normalized = normalizeSettings(parsed);
+    const groups = groupedEnvironments(normalized);
+    if (!groups.length) throw new Error(t("urlImportNoData"));
+    importPreviewSettings = normalized;
+    importSelectionState = savedSelections
+      ? createSelectionStateFromSaved(groups, savedSelections)
+      : createSelectionState(groups);
+    urlImportScopeMode = savedScopeMode === "all" ? "all" : "selected";
+    importPreviewSource = "url";
+    urlImportLoadedUrl = normalizedUrl;
+    urlImportView = "preview";
+    if (applyImmediately) await applyImportPreview();
+  } catch (error) {
+    clearImportPreview();
+    urlImportView = applyImmediately && urlImportConfig ? "saved" : "editor";
+    if (error instanceof SyntaxError) {
+      urlImportErrorMessage = t("urlImportInvalidJson");
+    } else if (error instanceof TypeError) {
+      urlImportErrorMessage = t("urlImportRequestFailed");
+    } else {
+      urlImportErrorMessage = String(error.message || error);
+    }
+  } finally {
+    urlImportLoading = false;
+    syncImportModalState();
+  }
+}
+
+function editUrlImportConfig() {
+  clearImportPreview();
+  urlImportView = "editor";
+  urlImportErrorMessage = "";
+  nodes.urlImportInput.value = urlImportConfig?.url || "";
+  syncImportModalState();
+  nodes.urlImportInput.focus();
+  nodes.urlImportInput.select();
+}
+
+async function removeUrlImportConfig() {
+  if (!urlImportConfig) return;
+  if (!window.confirm(t("urlImportConfirmRemove"))) return;
+  await chrome.storage.local.remove(URL_IMPORT_CONFIG_KEY);
+  urlImportConfig = null;
+  clearImportPreview();
+  urlImportView = "editor";
+  urlImportErrorMessage = "";
+  nodes.urlImportInput.value = "";
+  syncImportModalState();
+  setStatus(t("urlImportRemoved"));
+}
+
+async function applyImportPreview() {
+  if (!importPreviewSettings || !importSelectionState) return;
+  const isUrlImport = importPreviewSource === "url";
+  const effectiveSelectionState = isUrlImport && urlImportScopeMode === "all"
+    ? createSelectionState(groupedEnvironments(importPreviewSettings))
+    : importSelectionState;
+  const selectedImportSettings = buildSelectedSettings(importPreviewSettings, effectiveSelectionState);
+  const merged = mergeImportedSettings(settings, selectedImportSettings);
+  clearBasicValidationError();
+  clearAccountsValidationError();
+  settings = normalizeSettings(merged);
+  const invalidHomepageEnvironment = findInvalidHomepageEnvironment();
+  if (invalidHomepageEnvironment) {
+    selectedGroupId = invalidHomepageEnvironment.groupId;
+    selectedId = invalidHomepageEnvironment.id;
+    render();
+    showBasicValidationError(t("invalidEnvironmentUrl"));
+    closeImportModal();
+    return;
+  }
+
+  selectedGroupId = settings.groups[0]?.id || DEFAULT_GROUP_ID;
+  selectedId = settings.environments.find((environment) => environment.groupId === selectedGroupId)?.id || settings.environments[0]?.id || null;
+
+  if (isUrlImport) {
+    const nextUrlImportConfig = {
+      version: 1,
+      url: urlImportLoadedUrl,
+      scopeMode: urlImportScopeMode,
+      selections: urlImportScopeMode === "all" ? [] : buildUrlImportSelections(importPreviewSettings, importSelectionState),
+      lastImportedAt: Date.now()
+    };
+    await chrome.storage.local.set({
+      [STORAGE_KEY]: settings,
+      [URL_IMPORT_CONFIG_KEY]: nextUrlImportConfig
+    });
+    urlImportConfig = nextUrlImportConfig;
+    savedSettingsSnapshot = clone(settings);
+    hasUnsavedChanges = false;
+    syncSaveButtonState();
+  } else {
+    await persistSettingsSnapshot();
+  }
+
+  render();
+  setStatus(t("importedApplied"));
+  showImportSuccess();
+  if (isUrlImport) {
+    clearImportPreview();
+    urlImportView = "saved";
+    syncImportModalState();
+  } else {
+    closeImportModal();
   }
 }
 
@@ -2219,7 +2581,7 @@ function addGroup() {
   markChanged();
 }
 
-function renameGroup(groupId) {
+async function renameGroup(groupId) {
   const group = settings.groups.find((item) => item.id === groupId);
   if (!group) return;
   const value = window.prompt(t("promptRenameGroup"), group.name);
@@ -2229,9 +2591,11 @@ function renameGroup(groupId) {
     setStatus(t("groupExists"), true);
     return;
   }
+  if (name === group.name) return;
   group.name = name;
   render();
-  markChanged();
+  await persistSettingsSnapshot();
+  setStatus(t("saved"));
 }
 
 async function deleteGroup(groupId) {
@@ -2564,6 +2928,8 @@ bindNodeEvent(nodes.exportIncludeTestAccounts, "change", syncExportSecurityNotic
 bindNodeEvent(nodes.importConfigTrigger, "click", openImportModal);
 bindNodeEvent(nodes.importModalClose, "click", closeImportModal);
 bindNodeEvent(nodes.importModalCancel, "click", closeImportModal);
+bindNodeEvent(nodes.importTabFile, "click", () => setImportMethod("file"));
+bindNodeEvent(nodes.importTabUrl, "click", () => setImportMethod("url"));
 bindNodeEvent(nodes.importDropzone, "click", () => nodes.importConfig.click());
 bindNodeEvent(nodes.importConfig, "change", async () => {
   const file = nodes.importConfig.files?.[0];
@@ -2584,28 +2950,37 @@ bindNodeEvent(nodes.importDropzone, "drop", async (event) => {
   const file = event.dataTransfer?.files?.[0];
   await readImportFile(file);
 });
+bindNodeEvent(nodes.urlImportInput, "input", () => {
+  urlImportErrorMessage = "";
+  syncImportModalState();
+});
+bindNodeEvent(nodes.urlImportInput, "keydown", async (event) => {
+  if (event.key !== "Enter" || urlImportLoading || urlImportView === "preview") return;
+  event.preventDefault();
+  await loadUrlImportPreview(nodes.urlImportInput.value, null, urlImportConfig?.scopeMode);
+});
+bindNodeEvent(nodes.urlImportChange, "click", editUrlImportConfig);
+bindNodeEvent(nodes.urlImportReload, "click", async () => {
+  if (!urlImportConfig) return;
+  await loadUrlImportPreview(urlImportConfig.url, urlImportConfig.selections, urlImportConfig.scopeMode, true);
+});
+bindNodeEvent(nodes.urlImportScopeAll, "change", () => {
+  if (!nodes.urlImportScopeAll.checked) return;
+  urlImportScopeMode = "all";
+  syncImportModalState();
+});
+bindNodeEvent(nodes.urlImportScopeSelected, "change", () => {
+  if (!nodes.urlImportScopeSelected.checked) return;
+  urlImportScopeMode = "selected";
+  syncImportModalState();
+});
+bindNodeEvent(nodes.urlImportRemove, "click", removeUrlImportConfig);
 bindNodeEvent(nodes.importModalConfirm, "click", async () => {
-  if (!importPreviewSettings || !importSelectionState) return;
-  const selectedImportSettings = buildSelectedSettings(importPreviewSettings, importSelectionState);
-  const merged = mergeImportedSettings(settings, selectedImportSettings);
-  clearBasicValidationError();
-  clearAccountsValidationError();
-  settings = normalizeSettings(merged);
-  const invalidHomepageEnvironment = findInvalidHomepageEnvironment();
-  if (invalidHomepageEnvironment) {
-    selectedGroupId = invalidHomepageEnvironment.groupId;
-    selectedId = invalidHomepageEnvironment.id;
-    render();
-    showBasicValidationError(t("invalidEnvironmentUrl"));
-    closeImportModal();
+  if (importMethod === "url" && urlImportView === "editor") {
+    await loadUrlImportPreview(nodes.urlImportInput.value, null, urlImportConfig?.scopeMode);
     return;
   }
-  selectedGroupId = settings.groups[0]?.id || DEFAULT_GROUP_ID;
-  selectedId = settings.environments.find((environment) => environment.groupId === selectedGroupId)?.id || settings.environments[0]?.id || null;
-  await persistSettingsSnapshot();
-  render();
-  setStatus(t("importedApplied"));
-  closeImportModal();
+  await applyImportPreview();
 });
 bindNodeEvent(nodes.aboutModalClose, "click", closeAboutModal);
 bindNodeEvent(nodes.aboutModalConfirm, "click", closeAboutModal);
@@ -2635,7 +3010,8 @@ async function loadSettings() {
   }
   syncLocaleSwitcher();
   syncAboutModalState();
-  const result = await chrome.storage.local.get([STORAGE_KEY]);
+  const result = await chrome.storage.local.get([STORAGE_KEY, URL_IMPORT_CONFIG_KEY]);
+  urlImportConfig = normalizeUrlImportConfig(result[URL_IMPORT_CONFIG_KEY]);
   applySettings(result[STORAGE_KEY] || createSampleSettings(), t("ready"));
   selectEnvironmentFromQuery();
   render();

@@ -330,15 +330,73 @@
           <div class="selection-modal__head">
             <div>
               <h2 id="import-modal-title" data-i18n="importDialogTitle">Import Data</h2>
-              <p class="selection-modal__hint" data-i18n="importDialogHint">Choose a file or drag it here, then select which groups and environments to import.</p>
+              <p id="import-modal-hint" class="selection-modal__hint" data-i18n="importDialogHint">Choose a file or load a configuration URL, then select which groups and environments to import.</p>
             </div>
             <button id="import-modal-close" class="group-icon-button" type="button" aria-label="Close">x</button>
           </div>
 
-          <button id="import-dropzone" class="import-dropzone" type="button">
-            <span class="import-dropzone__title" data-i18n="importDropzoneTitle">Choose File or Drop Here</span>
-            <span id="import-dropzone-detail" class="import-dropzone__detail" data-i18n="importDropzoneHint">Only JSON files exported from EnvMate are supported.</span>
-          </button>
+          <div class="import-tabs" role="tablist" aria-label="Import method">
+            <button id="import-tab-file" class="import-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="import-file-panel" data-i18n="importFromFile">From File</button>
+            <button id="import-tab-url" class="import-tab" type="button" role="tab" aria-selected="false" aria-controls="import-url-panel" data-i18n="importFromUrl">From URL</button>
+          </div>
+
+          <div id="import-file-panel" class="import-method-panel" role="tabpanel" aria-labelledby="import-tab-file">
+            <button id="import-dropzone" class="import-dropzone" type="button">
+              <span class="import-dropzone__title" data-i18n="importDropzoneTitle">Choose File or Drop Here</span>
+              <span id="import-dropzone-detail" class="import-dropzone__detail" data-i18n="importDropzoneHint">Only JSON files exported from EnvMate are supported.</span>
+            </button>
+          </div>
+
+          <div id="import-url-panel" class="import-method-panel" role="tabpanel" aria-labelledby="import-tab-url" hidden>
+            <div id="url-import-editor" class="url-import-editor">
+              <label class="field" for="url-import-input">
+                <span data-i18n="urlImportAddress">Configuration URL</span>
+                <input id="url-import-input" type="url" inputmode="url" autocomplete="url" placeholder="https://example.com/envmate-config.json" />
+              </label>
+              <p class="url-import-help" data-i18n="urlImportHelp">Load an EnvMate JSON configuration, then choose what to import.</p>
+              <p id="url-import-error" class="url-import-error" role="alert" hidden></p>
+            </div>
+
+            <div id="url-import-configured" class="url-import-configured" hidden>
+              <div class="url-import-configured__head">
+                <div>
+                  <span class="url-import-status" data-i18n="urlImportConfigured">Configured</span>
+                  <div id="url-import-saved-url" class="url-import-configured__url"></div>
+                </div>
+                <div class="url-import-configured__actions">
+                  <button id="url-import-change" type="button" data-i18n="urlImportChange">Edit Configuration</button>
+                  <button id="url-import-reload" class="primary" type="button" data-i18n="urlImportReload">Import Again</button>
+                </div>
+              </div>
+              <p id="url-import-configured-error" class="url-import-error" role="alert" hidden></p>
+              <div class="url-import-meta">
+                <div>
+                  <span class="url-import-meta__label" data-i18n="urlImportScope">Import scope</span>
+                  <div id="url-import-saved-groups" class="url-import-groups"></div>
+                </div>
+                <div>
+                  <span class="url-import-meta__label" data-i18n="urlImportLastImported">Last imported</span>
+                  <span id="url-import-last-imported" class="url-import-meta__value"></span>
+                </div>
+              </div>
+              <button id="url-import-remove" class="url-import-remove" type="button" data-i18n="urlImportRemove">Remove URL configuration</button>
+            </div>
+          </div>
+
+          <div id="url-import-scope-mode" class="url-import-scope-mode" hidden>
+            <span class="url-import-scope-mode__label" data-i18n="urlImportScope">Import scope</span>
+            <div class="url-import-scope-options">
+              <label class="url-import-scope-option">
+                <input id="url-import-scope-all" type="radio" name="url-import-scope" value="all" checked />
+                <span data-i18n="urlImportScopeAll">All groups</span>
+              </label>
+              <label class="url-import-scope-option">
+                <input id="url-import-scope-selected" type="radio" name="url-import-scope" value="selected" />
+                <span data-i18n="urlImportScopeSelected">Selected groups</span>
+              </label>
+            </div>
+            <span id="url-import-scope-note" class="url-import-scope-mode__note"></span>
+          </div>
 
           <div id="import-selection-list" class="selection-tree selection-tree--empty">
             <div class="empty" data-i18n="importNoFile">Choose a file to preview importable groups and environments.</div>
@@ -412,6 +470,11 @@
           </div>
         </div>
       </section>
+
+      <div id="import-success-toast" class="import-success-toast" role="status" aria-live="polite" aria-atomic="true" hidden>
+        <span class="import-success-toast__icon" aria-hidden="true">✓</span>
+        <span id="import-success-toast-message" data-i18n="importedApplied">Import successful</span>
+      </div>
     </main>
 
     <script src="../src/i18n.js"></script>
