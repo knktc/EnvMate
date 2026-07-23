@@ -98,7 +98,3 @@ The most important part of each environment is its `URL Rules`, because those ru
 - `make crx KEY=path/to/key.pem`: reuse an existing signing key
 
 If `KEY` is not provided, Chrome creates a new private key in `.keys/`, which changes the extension identity. Do not commit files in `.keys/`.
-
-## Friendly Links
-
-- [linux.do](https://linux.do/) - Where possible begins
