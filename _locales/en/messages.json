@@ -71,6 +71,7 @@
   "badgeStyle": { "message": "Badge Style" },
   "badgeStylePill": { "message": "Pill" },
   "badgeStyleSlanted": { "message": "Corner Ribbon" },
+  "badgeStyleEdgeGlow": { "message": "Edge Glow" },
   "badgePlacement": { "message": "Position & Display" },
   "badgePosition": { "message": "Badge Position" },
   "badgeScale": { "message": "Badge Size" },

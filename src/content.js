@@ -165,6 +165,11 @@
   }
 
   function createBadge(environment, settings) {
+    if (environment.badgeStyle === "edge-glow") {
+      createEdgeGlow(environment);
+      return;
+    }
+
     const badge = document.createElement("div");
     badge.className = "envmate-badge";
     badge.dataset.envmateRoot = "badge";
@@ -185,6 +190,17 @@
 
     enableBadgePeekThrough(badge);
     document.documentElement.append(badge);
+  }
+
+  function createEdgeGlow(environment) {
+    const glow = document.createElement("div");
+    glow.className = "envmate-edge-glow";
+    glow.dataset.envmateRoot = "edge-glow";
+    glow.style.setProperty("--envmate-edge-glow-color", environment.badgeColor || environment.color || "#2563eb");
+    glow.style.setProperty("--envmate-edge-glow-opacity", environment.badgeOpacity ?? 1);
+    glow.style.setProperty("--envmate-edge-glow-scale", environment.badgeScale ?? 1);
+    glow.title = t("markerTitle");
+    document.documentElement.append(glow);
   }
 
   function createWatermark(environment) {

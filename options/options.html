@@ -148,6 +148,14 @@
                         <span class="radio-card__preview radio-card__preview--pill" data-preview-label="EnvMate">EnvMate</span>
                       </span>
                     </label>
+                    <label class="radio-card">
+                      <input type="radio" name="badge-style" value="edge-glow" />
+                      <span class="radio-card__indicator" aria-hidden="true"></span>
+                      <span class="radio-card__body">
+                        <span class="radio-card__title" data-i18n="badgeStyleEdgeGlow">Edge Glow</span>
+                        <span class="radio-card__preview radio-card__preview--edge-glow" aria-hidden="true"></span>
+                      </span>
+                    </label>
                   </div>
                 </div>
 
@@ -296,7 +304,7 @@
       <div id="selection-modal-backdrop" class="modal-backdrop" hidden></div>
 
       <section id="export-modal" class="selection-modal" hidden aria-labelledby="export-modal-title">
-        <div class="selection-modal__card">
+        <div class="selection-modal__card selection-modal__card--export">
           <div class="selection-modal__head">
             <div>
               <h2 id="export-modal-title" data-i18n="exportDialogTitle">Export Selected Data</h2>
@@ -326,7 +334,7 @@
       </section>
 
       <section id="import-modal" class="selection-modal" hidden aria-labelledby="import-modal-title">
-        <div class="selection-modal__card">
+        <div class="selection-modal__card selection-modal__card--import">
           <div class="selection-modal__head">
             <div>
               <h2 id="import-modal-title" data-i18n="importDialogTitle">Import Data</h2>

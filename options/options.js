@@ -1084,6 +1084,7 @@ function syncBadgeStyleOptions(value) {
   nodes.badgeStyleOptions.forEach((option) => {
     option.checked = option.value === value;
   });
+  nodes.badgePosition.disabled = value === "edge-glow";
 }
 
 function clearAccountsValidationError() {
@@ -2381,7 +2382,9 @@ function renderRows() {
 }
 
 function previewStyleLabel(environment) {
-  return environment.badgeStyle === "slanted" ? t("badgeStyleSlanted") : t("badgeStylePill");
+  if (environment.badgeStyle === "slanted") return t("badgeStyleSlanted");
+  if (environment.badgeStyle === "edge-glow") return t("badgeStyleEdgeGlow");
+  return t("badgeStylePill");
 }
 
 function renderPreviewWatermark(surface, label, environment) {
@@ -2407,6 +2410,16 @@ function renderPreviewWatermark(surface, label, environment) {
 }
 
 function renderPreviewBadge(surface, label, environment) {
+  if (environment.badgeStyle === "edge-glow") {
+    const glow = document.createElement("div");
+    glow.className = "marker-preview__edge-glow";
+    glow.style.setProperty("--preview-edge-glow-color", environment.badgeColor || "#2563eb");
+    glow.style.setProperty("--preview-edge-glow-opacity", String(environment.badgeOpacity ?? 1));
+    glow.style.setProperty("--preview-edge-glow-scale", String(environment.badgeScale ?? 1));
+    surface.append(glow);
+    return;
+  }
+
   const badge = document.createElement("div");
   badge.className = "marker-preview__badge";
   badge.dataset.position = environment.badgePosition || "top-right";
@@ -2821,6 +2834,7 @@ bindNodeEvent(nodes.badgePosition, "change", () => {
 nodes.badgeStyleOptions.forEach((option) => {
   bindNodeEvent(option, "change", () => {
     const nextStyle = selectedBadgeStyle();
+    nodes.badgePosition.disabled = nextStyle === "edge-glow";
     updateSelectedEnvironment({ badgeStyle: nextStyle });
   });
 });

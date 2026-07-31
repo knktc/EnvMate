@@ -32,6 +32,8 @@ Many internal systems look nearly identical across dev, test, pre-release, and p
 
 ## Changelog / 更新
 
+- 2026-07-31 · v0.4.0: Added a breathing edge-glow marker and fixed import/export modals to adapt to expandable selection trees.
+- 2026-07-31 · v0.4.0：新增呼吸灯标记，并修复导入和导出弹框在展开环境树时的自适应布局。
 - 2026-07-20 · v0.3.0: Added URL-based configuration import with saved import scopes and one-click re-import.
 - 2026-07-20 · v0.3.0：新增通过 URL 导入配置，支持保存导入范围和一键重新导入。
 - 2026-07-10 · v0.2.4: Added optional test-account export with a password-security notice.
@@ -55,7 +57,7 @@ Many internal systems look nearly identical across dev, test, pre-release, and p
 - `watermark`: watermark only
 - `badge-watermark`: badge and watermark together
 
-Badge settings support style, position, size, offset, and opacity.
+Badge styles include a corner ribbon, pill, and breathing edge glow. The edge glow uses the badge color and respects the badge size and opacity settings.
 
 Watermark settings support text, opacity, angle, size, and spacing.
 

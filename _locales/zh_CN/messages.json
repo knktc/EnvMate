@@ -69,6 +69,7 @@
   "badgeStyle": { "message": "徽标样式" },
   "badgeStylePill": { "message": "圆角标签" },
   "badgeStyleSlanted": { "message": "角标横幅" },
+  "badgeStyleEdgeGlow": { "message": "呼吸灯" },
   "badgePlacement": { "message": "位置与显示" },
   "badgePosition": { "message": "徽标位置" },
   "badgeScale": { "message": "徽标大小" },
