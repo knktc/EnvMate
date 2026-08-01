@@ -5,6 +5,12 @@
 <h1 align="center">EnvMate</h1>
 
 <p align="center">
+  <a href="https://chromewebstore.google.com/detail/envmate/mccdmjfnlkkjmcioapnehkmpgkblhiei">
+    <img src="https://img.shields.io/chrome-web-store/users/mccdmjfnlkkjmcioapnehkmpgkblhiei?logo=googlechrome&amp;label=Chrome%20users" alt="Chrome Web Store users">
+  </a>
+</p>
+
+<p align="center">
   A Chrome extension for teams that switch between development, testing, staging, and production environments all day.
 </p>
 
