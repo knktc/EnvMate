@@ -38,6 +38,8 @@ Many internal systems look nearly identical across dev, test, pre-release, and p
 
 ## Changelog / 更新
 
+- 2026-08-05 · v0.5.0: Added in-page text editing, making temporary copy checks and screenshots easier.
+- 2026-08-05 · v0.5.0：新增页面文字编辑功能，方便临时修改文案进行核对和截图。
 - 2026-07-31 · v0.4.0: Added a breathing edge-glow marker and fixed import/export modals to adapt to expandable selection trees.
 - 2026-07-31 · v0.4.0：新增呼吸灯标记，并修复导入和导出弹框在展开环境树时的自适应布局。
 - 2026-07-20 · v0.3.0: Added URL-based configuration import with saved import scopes and one-click re-import.

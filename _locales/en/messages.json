@@ -230,6 +230,9 @@
   "invalidEnvironmentUrl": { "message": "Environment URL must be a valid http or https address." },
   "noAccountsConfigured": { "message": "No accounts configured." },
   "noEnvironmentsConfigured": { "message": "No environments configured." },
+  "moreFeatures": { "message": "More Features" },
+  "editPageText": { "message": "Edit Page Text" },
+  "exitPageTextEditing": { "message": "Exit Text Editing" },
   "accountFallback": { "message": "Account" }
   ,
   "envNamePlaceholder": { "message": "Test Environment" },

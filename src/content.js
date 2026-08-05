@@ -520,6 +520,16 @@
       sendResponse(fillAccount(message.account || {}));
       return true;
     }
+    if (message?.type === "ENVMATE_GET_PAGE_EDITING_STATE") {
+      sendResponse({ enabled: document.designMode === "on" });
+      return true;
+    }
+    if (message?.type === "ENVMATE_TOGGLE_PAGE_EDITING") {
+      const enabled = message.enabled === true;
+      document.designMode = enabled ? "on" : "off";
+      sendResponse({ enabled: document.designMode === "on" });
+      return true;
+    }
     return false;
   });
 

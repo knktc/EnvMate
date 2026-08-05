@@ -126,6 +126,7 @@ h2 {
 }
 
 .environment-card {
+  position: relative;
   padding: 12px;
 }
 
@@ -180,6 +181,93 @@ h2 {
 .quick-action-button:hover {
   border-color: var(--accent-soft-border-hover);
   background: var(--accent-soft-bg-hover);
+}
+
+.environment-card__tools {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+}
+
+.environment-tools-toggle {
+  width: 36px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid #dbe4f0;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.environment-tools-toggle:hover {
+  border-color: var(--accent-soft-border);
+  background: var(--accent-soft-bg);
+  color: var(--accent-soft-text);
+}
+
+.environment-tools-toggle[aria-expanded="true"] {
+  border-color: var(--accent-soft-border);
+  background: var(--accent-soft-bg);
+  color: var(--accent-soft-text);
+}
+
+.environment-tools-panel {
+  padding: 0 2px;
+}
+
+.environment-tools-toggle__icon {
+  width: 20px;
+  height: 20px;
+  display: block;
+  transition: transform 160ms ease;
+}
+
+.environment-tools-toggle[aria-expanded="true"] .environment-tools-toggle__icon {
+  transform: rotate(180deg);
+}
+
+.page-editing-button {
+  width: 100%;
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border: 1px solid var(--accent-soft-border);
+  border-radius: 10px;
+  background: var(--accent-soft-bg);
+  color: var(--accent-soft-text);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.page-editing-button:hover {
+  border-color: var(--accent-soft-border-hover);
+  background: var(--accent-soft-bg-hover);
+}
+
+.page-editing-button.is-active {
+  border-color: #fbbf24;
+  background: #fffbeb;
+  color: #b45309;
+}
+
+.page-editing-button.is-active:hover {
+  border-color: #f59e0b;
+  background: #fef3c7;
+}
+
+.page-editing-button__icon {
+  width: 17px;
+  height: 17px;
+  flex: 0 0 auto;
 }
 
 .section {

@@ -7,6 +7,11 @@ const environmentCardNode = document.querySelector("#environment-card");
 const popupNode = document.querySelector(".popup");
 const environmentToggleNode = document.querySelector("#environment-toggle");
 const environmentEnabledNode = document.querySelector("#environment-enabled");
+const environmentToolsNode = document.querySelector("#environment-tools");
+const environmentToolsToggleNode = document.querySelector("#environment-tools-toggle");
+const environmentToolsPanelNode = document.querySelector("#environment-tools-panel");
+const pageEditingToggleNode = document.querySelector("#page-editing-toggle");
+const pageEditingLabelNode = document.querySelector("#page-editing-label");
 const favoritesSectionNode = document.querySelector("#favorites-section");
 const favoritesNode = document.querySelector("#favorites");
 const favoritesMoreNode = document.querySelector("#favorites-more");
@@ -31,6 +36,8 @@ let settings = null;
 let expandedEnvironmentId = null;
 let expandedFavoriteGroups = new Set();
 let showAllFavoriteGroups = false;
+let pageEditingEnabled = false;
+let environmentToolsExpanded = false;
 
 function createLucideIcon(nodes, className = "popup-icon") {
   const namespace = "http://www.w3.org/2000/svg";
@@ -363,6 +370,8 @@ function renderEnvironment() {
   const suggestedPrefix = buildSuggestedPrefix(url);
   currentUrlNode.textContent = url || t("noActiveTab");
   quickAddEnvironmentNode.hidden = true;
+  environmentToolsNode.hidden = true;
+  environmentToolsPanelNode.hidden = true;
   currentEnvironment = settings ? findEnvironment(settings, url, true) : null;
   renderFavorites();
 
@@ -384,11 +393,44 @@ function renderEnvironment() {
   environmentToggleNode.hidden = false;
   environmentEnabledNode.checked = currentEnvironment.enabled !== false;
   accountsSectionNode.hidden = false;
+  environmentToolsNode.hidden = false;
+  renderEnvironmentTools();
   environmentNameNode.textContent = currentEnvironment.name || t("environmentFallback");
   const metaParts = [findGroupName(settings, currentEnvironment) || t("defaultGroup"), markerLabel(currentEnvironment)];
   if (currentEnvironment.enabled === false) metaParts.push(t("disabled"));
   environmentMetaNode.textContent = metaParts.join(" · ");
   renderAccounts();
+}
+
+function renderEnvironmentTools() {
+  environmentToolsPanelNode.hidden = !environmentToolsExpanded;
+  environmentToolsToggleNode.setAttribute("aria-expanded", String(environmentToolsExpanded));
+  environmentToolsToggleNode.setAttribute("aria-label", t("moreFeatures"));
+  environmentToolsToggleNode.title = t("moreFeatures");
+}
+
+function renderPageEditingToggle() {
+  pageEditingToggleNode.classList.toggle("is-active", pageEditingEnabled);
+  pageEditingLabelNode.textContent = t(pageEditingEnabled ? "exitPageTextEditing" : "editPageText");
+  pageEditingToggleNode.title = t(pageEditingEnabled ? "exitPageTextEditing" : "editPageText");
+}
+
+async function syncPageEditingState() {
+  pageEditingEnabled = false;
+  if (!currentEnvironment || !currentTab?.id) {
+    renderPageEditingToggle();
+    return;
+  }
+  try {
+    const result = await chrome.tabs.sendMessage(currentTab.id, { type: "ENVMATE_GET_PAGE_EDITING_STATE" });
+    pageEditingEnabled = result?.enabled === true;
+    if (pageEditingEnabled) environmentToolsExpanded = true;
+  } catch (_) {
+    environmentToolsNode.hidden = true;
+    environmentToolsPanelNode.hidden = true;
+  }
+  renderEnvironmentTools();
+  renderPageEditingToggle();
 }
 
 function releaseDynamicI18nPlaceholders() {
@@ -407,6 +449,8 @@ function renderUnavailableState() {
   popupNode.classList.add("is-unmatched");
   environmentToggleNode.hidden = true;
   accountsSectionNode.hidden = true;
+  environmentToolsNode.hidden = true;
+  environmentToolsPanelNode.hidden = true;
   environmentNameNode.textContent = t("noMatch");
   environmentMetaNode.textContent = "";
   renderFavorites();
@@ -467,6 +511,7 @@ async function init() {
   const result = await chrome.storage.local.get([STORAGE_KEY]);
   settings = result[STORAGE_KEY] || { environments: [] };
   renderEnvironment();
+  await syncPageEditingState();
 }
 
 environmentEnabledNode.addEventListener("change", async () => {
@@ -476,6 +521,26 @@ environmentEnabledNode.addEventListener("change", async () => {
   );
   await chrome.storage.local.set({ [STORAGE_KEY]: settings });
   renderEnvironment();
+});
+
+environmentToolsToggleNode.addEventListener("click", () => {
+  environmentToolsExpanded = !environmentToolsExpanded;
+  renderEnvironmentTools();
+});
+
+pageEditingToggleNode.addEventListener("click", async () => {
+  if (!currentTab?.id) return;
+  try {
+    const result = await chrome.tabs.sendMessage(currentTab.id, {
+      type: "ENVMATE_TOGGLE_PAGE_EDITING",
+      enabled: !pageEditingEnabled
+    });
+    pageEditingEnabled = result?.enabled === true;
+    renderPageEditingToggle();
+  } catch (_) {
+    environmentToolsNode.hidden = true;
+    environmentToolsPanelNode.hidden = true;
+  }
 });
 
 openOptionsButton.addEventListener("click", openCurrentEnvironmentInOptions);

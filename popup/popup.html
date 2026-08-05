@@ -32,6 +32,23 @@
         <button id="quick-add-environment" class="quick-action-button environment-card__action" type="button" hidden data-i18n="quickAddCurrentPage">
           Add Current Site
         </button>
+        <div id="environment-tools" class="environment-card__tools" hidden>
+          <button id="environment-tools-toggle" class="environment-tools-toggle" type="button" aria-expanded="false" title="More features">
+            <svg class="environment-tools-toggle__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="m6 9 6 6 6-6"></path>
+            </svg>
+          </button>
+        </div>
+      </section>
+
+      <section id="environment-tools-panel" class="environment-tools-panel" hidden>
+        <button id="page-editing-toggle" class="page-editing-button" type="button">
+          <svg class="page-editing-button__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 20h9"></path>
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4Z"></path>
+          </svg>
+          <span id="page-editing-label">Edit Page Text</span>
+        </button>
       </section>
 
       <section id="accounts-section" class="section">
