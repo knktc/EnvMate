@@ -1,8 +1,9 @@
 name: Build release artifact
 
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - "v*"
 
 jobs:
   build-and-upload:
@@ -12,16 +13,18 @@ jobs:
       contents: write
 
     steps:
-      - name: Check out the released tag
+      - name: Check out the release tag
         uses: actions/checkout@v6
         with:
-          ref: ${{ github.event.release.tag_name }}
+          ref: ${{ github.ref_name }}
 
       - name: Build ZIP
         run: make zip
 
-      - name: Upload ZIP to the release
+      - name: Create release and upload ZIP
         env:
           GH_TOKEN: ${{ github.token }}
-          RELEASE_TAG: ${{ github.event.release.tag_name }}
-        run: gh release upload "$RELEASE_TAG" dist/envmate-*.zip --clobber
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          gh release view "$RELEASE_TAG" >/dev/null 2>&1 || gh release create "$RELEASE_TAG" --generate-notes --title "$RELEASE_TAG"
+          gh release upload "$RELEASE_TAG" dist/envmate-*.zip --clobber

@@ -17,13 +17,23 @@
   box-sizing: border-box;
 }
 
+html {
+  width: 360px;
+  min-width: 360px;
+  max-width: 360px;
+  overflow-x: hidden;
+}
+
 [hidden] {
   display: none !important;
 }
 
 body {
   width: 360px;
+  min-width: 360px;
+  max-width: 360px;
   margin: 0;
+  overflow-x: hidden;
   background: var(--bg);
   color: var(--text);
   font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -33,6 +43,11 @@ body {
   display: grid;
   gap: 10px;
   padding: 12px;
+  min-width: 0;
+}
+
+.popup > * {
+  min-width: 0;
 }
 
 .header {
@@ -334,6 +349,7 @@ h2 {
 .favorites-list {
   display: grid;
   gap: 8px;
+  min-width: 0;
 }
 
 #favorites-section {
@@ -365,6 +381,7 @@ h2 {
 }
 
 .favorite-group {
+  min-width: 0;
   border: 1px solid #e6edf6;
   border-radius: 8px;
   background: rgba(255, 255, 255, 0.82);
@@ -422,10 +439,12 @@ h2 {
   display: grid;
   gap: 6px;
   padding: 0 8px 8px;
+  min-width: 0;
 }
 
 #favorites-section .favorite-link.link-button {
   width: 100%;
+  min-width: 0;
   display: grid;
   gap: 6px;
   padding: 8px 10px;

@@ -38,6 +38,8 @@ Many internal systems look nearly identical across dev, test, pre-release, and p
 
 ## Changelog / 更新
 
+- 2026-08-12 · v0.5.1: Fixed Quick Access expansion causing the popup window to become wider.
+- 2026-08-12 · v0.5.1：修复展开快速访问后弹窗宽度异常变大的问题。
 - 2026-08-05 · v0.5.0: Added in-page text editing, making temporary copy checks and screenshots easier.
 - 2026-08-05 · v0.5.0：新增页面文字编辑功能，方便临时修改文案进行核对和截图。
 - 2026-07-31 · v0.4.0: Added a breathing edge-glow marker and fixed import/export modals to adapt to expandable selection trees.
