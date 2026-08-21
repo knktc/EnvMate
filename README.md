@@ -8,6 +8,9 @@
   <a href="https://chromewebstore.google.com/detail/envmate/mccdmjfnlkkjmcioapnehkmpgkblhiei">
     <img src="https://img.shields.io/chrome-web-store/users/mccdmjfnlkkjmcioapnehkmpgkblhiei?logo=googlechrome&amp;label=Chrome%20users" alt="Chrome Web Store users">
   </a>
+  <a href="https://microsoftedge.microsoft.com/addons/detail/enighdiiommdnommodoninagjanhiogb">
+    <img src="https://img.shields.io/badge/Edge%20Add--ons-0078D7?logo=microsoftedge&amp;logoColor=white" alt="Microsoft Edge Add-ons">
+  </a>
 </p>
 
 <p align="center">
@@ -31,6 +34,10 @@
 ## Install from Chrome Web Store
 
 [Install EnvMate from the Chrome Web Store](https://chromewebstore.google.com/detail/envmate/mccdmjfnlkkjmcioapnehkmpgkblhiei)
+
+## Install from Microsoft Edge Add-ons
+
+[Install EnvMate from Microsoft Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/enighdiiommdnommodoninagjanhiogb)
 
 ## Why EnvMate
 
