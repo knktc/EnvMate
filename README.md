@@ -113,6 +113,7 @@ The most important part of each environment is its `URL Rules`, because those ru
 ## Build Release Artifacts
 
 - `make zip`: create `dist/envmate-<version>.zip`
+- `make firefox-zip`: create `dist/envmate-<version>-firefox.zip` for Firefox AMO; this package uses the Firefox background-script fallback and does not change the Chrome/Edge package.
 - `make crx`: build a `.crx` package with Chrome
 - `make crx KEY=path/to/key.pem`: reuse an existing signing key
 

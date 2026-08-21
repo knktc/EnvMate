@@ -2,21 +2,24 @@ NAME := envmate
 VERSION := $(shell sed -nE 's/.*"version":[[:space:]]*"([^"]+)".*/\1/p' manifest.json | head -n 1)
 DIST_DIR := dist
 ZIP_FILE := $(DIST_DIR)/$(NAME)-$(VERSION).zip
+FIREFOX_ZIP_FILE := $(DIST_DIR)/$(NAME)-$(VERSION)-firefox.zip
 CRX_FILE := $(DIST_DIR)/$(NAME)-$(VERSION).crx
 KEYS_DIR := .keys
 GENERATED_KEY_FILE := $(KEYS_DIR)/$(NAME)-$(VERSION).pem
 STAGE_ROOT := $(DIST_DIR)/stage
 ZIP_STAGE_DIR := $(STAGE_ROOT)/zip-$(NAME)-$(VERSION)
+FIREFOX_STAGE_DIR := $(STAGE_ROOT)/firefox-$(NAME)-$(VERSION)
 CRX_STAGE_DIR := $(STAGE_ROOT)/crx-$(NAME)-$(VERSION)
 CHROME ?= /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
 KEY ?=
 PACKAGE_CONTENTS := manifest.json _locales assets options popup src
 
-.PHONY: help stage zip crx clean
+.PHONY: help stage zip firefox-zip crx clean
 
 help:
 	@echo "Targets:"
 	@echo "  make zip              Build $(ZIP_FILE) for store/manual release"
+	@echo "  make firefox-zip      Build $(FIREFOX_ZIP_FILE) for Firefox AMO"
 	@echo "  make crx              Build $(CRX_FILE) with Chrome CLI"
 	@echo "  make crx KEY=key.pem  Reuse an existing PEM private key"
 	@echo "  make clean            Remove build artifacts"
@@ -38,6 +41,16 @@ zip: stage
 	@rm -f "$(ZIP_FILE)"
 	@cd "$(ZIP_STAGE_DIR)" && zip -qr "$(abspath $(ZIP_FILE))" .
 	@echo "Built $(ZIP_FILE)"
+
+firefox-zip: $(DIST_DIR)
+	@rm -rf "$(FIREFOX_STAGE_DIR)"
+	@mkdir -p "$(FIREFOX_STAGE_DIR)"
+	@for item in $(PACKAGE_CONTENTS); do cp -R "$$item" "$(FIREFOX_STAGE_DIR)/$$item"; done
+	@python3 build_firefox_manifest.py "manifest.json" "$(FIREFOX_STAGE_DIR)/manifest.json"
+	@find "$(FIREFOX_STAGE_DIR)" \( -name '.DS_Store' -o -name '__MACOSX' \) -print0 | xargs -0 rm -rf
+	@rm -f "$(FIREFOX_ZIP_FILE)"
+	@cd "$(FIREFOX_STAGE_DIR)" && zip -qr "$(abspath $(FIREFOX_ZIP_FILE))" .
+	@echo "Built $(FIREFOX_ZIP_FILE)"
 
 crx: stage $(KEYS_DIR)
 	@test -x "$(CHROME)" || { echo "Chrome executable not found at $(CHROME)"; exit 1; }
