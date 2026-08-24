@@ -11,10 +11,13 @@
   <a href="https://microsoftedge.microsoft.com/addons/detail/enighdiiommdnommodoninagjanhiogb">
     <img src="https://img.shields.io/badge/Edge%20Add--ons-0078D7?logo=microsoftedge&amp;logoColor=white" alt="Microsoft Edge Add-ons">
   </a>
+  <a href="https://addons.mozilla.org/addon/envmate/">
+    <img src="https://img.shields.io/amo/users/envmate?logo=firefoxbrowser&amp;logoColor=white&amp;label=Firefox%20users" alt="Firefox Add-on users">
+  </a>
 </p>
 
 <p align="center">
-  A Chrome extension for teams that switch between development, testing, staging, and production environments all day.
+  A browser extension that works for Chrome, Edge, and Firefox, built for teams that switch between development, testing, staging, and production environments all day.
 </p>
 
 <p align="center">
@@ -38,6 +41,10 @@
 ## Install from Microsoft Edge Add-ons
 
 [Install EnvMate from Microsoft Edge Add-ons](https://microsoftedge.microsoft.com/addons/detail/enighdiiommdnommodoninagjanhiogb)
+
+## Install from Firefox Add-ons
+
+[Install EnvMate from Firefox Add-ons](https://addons.mozilla.org/addon/envmate/)
 
 ## Why EnvMate
 
@@ -84,7 +91,7 @@ Each environment can store multiple test accounts. Accounts can be reordered, ma
 
 EnvMate only fills fields after an explicit user action. It does not submit forms or trigger login buttons automatically.
 
-## Install Locally
+## Install Locally in Chrome or Edge
 
 1. Open `chrome://extensions`.
 2. Enable `Developer mode`.
