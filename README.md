@@ -5,6 +5,10 @@
 <h1 align="center">EnvMate</h1>
 
 <p align="center">
+  English | <a href="README.zh-CN.md">简体中文</a>
+</p>
+
+<p align="center">
   <a href="https://chromewebstore.google.com/detail/envmate/mccdmjfnlkkjmcioapnehkmpgkblhiei">
     <img src="https://img.shields.io/chrome-web-store/users/mccdmjfnlkkjmcioapnehkmpgkblhiei?logo=googlechrome&amp;label=Chrome%20users" alt="Chrome Web Store users">
   </a>
@@ -50,24 +54,16 @@
 
 Many internal systems look nearly identical across dev, test, pre-release, and production. EnvMate adds lightweight visual signals so you can tell where you are before you click, edit, or submit anything important.
 
-## Changelog / 更新
+## Changelog
 
 - 2026-08-12 · v0.5.1: Fixed Quick Access expansion causing the popup window to become wider.
-- 2026-08-12 · v0.5.1：修复展开快速访问后弹窗宽度异常变大的问题。
 - 2026-08-05 · v0.5.0: Added in-page text editing, making temporary copy checks and screenshots easier.
-- 2026-08-05 · v0.5.0：新增页面文字编辑功能，方便临时修改文案进行核对和截图。
 - 2026-07-31 · v0.4.0: Added a breathing edge-glow marker and fixed import/export modals to adapt to expandable selection trees.
-- 2026-07-31 · v0.4.0：新增呼吸灯标记，并修复导入和导出弹框在展开环境树时的自适应布局。
 - 2026-07-20 · v0.3.0: Added URL-based configuration import with saved import scopes and one-click re-import.
-- 2026-07-20 · v0.3.0：新增通过 URL 导入配置，支持保存导入范围和一键重新导入。
 - 2026-07-10 · v0.2.4: Added optional test-account export with a password-security notice.
-- 2026-07-10 · v0.2.4：导出时可选择包含测试账号，并增加密码安全提示。
 - 2026-07-06 · v0.2.3: Quick Access now follows the configured environment order instead of recent visits.
-- 2026-07-06 · v0.2.3：快速访问改为按配置中的环境顺序排列，不再按最近访问排序。
 - 2026-06-18 · v0.2.1: Improved drag reordering for environments in grouped settings.
-- 2026-06-18 · v0.2.1：优化配置分组内环境的拖拽排序。
 - 2026-06-17 · v0.2.0: Added Quick Access.
-- 2026-06-17 · v0.2.0：新增 Quick Access。
 
 ## URL Rule Types
 
