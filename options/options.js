@@ -2579,7 +2579,7 @@ async function setSelectedEnvironmentEnabled(enabled) {
   setStatus(t("saved"));
 }
 
-function addGroup() {
+async function addGroup() {
   const value = window.prompt(t("promptGroupName"), "");
   if (value === null) return;
   const name = normalizeGroupName(value);
@@ -2591,7 +2591,8 @@ function addGroup() {
   settings.groups.push(group);
   selectedGroupId = group.id;
   render();
-  markChanged();
+  await persistSettingsSnapshot();
+  setStatus(t("saved"));
 }
 
 async function renameGroup(groupId) {
