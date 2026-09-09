@@ -2,8 +2,7 @@
   const STORAGE_KEY = "envmateSettings";
   let activeEnvironment = null;
   let activeSettings = null;
-  let originalTitle = document.title;
-  let titleApplied = false;
+  const titleManager = EnvMateTitleManager.createTitleManager({ document });
   let lastUrl = window.location.href;
   let autoFillKey = "";
   let autoFillTimer = null;
@@ -61,10 +60,6 @@
 
   function removeMarkers() {
     document.querySelectorAll("[data-envmate-root]").forEach((node) => node.remove());
-    if (titleApplied) {
-      document.title = originalTitle;
-      titleApplied = false;
-    }
   }
 
   function markerLabel(environment) {
@@ -84,14 +79,6 @@
     const label = String(account?.label || "").trim();
     if (username && label) return `${username} (${label})`;
     return username || label || t("accountFallback");
-  }
-
-  function applyTitle(environment) {
-    if (!environment.titlePrefix) return;
-    const badge = markerLabel(environment);
-    if (!titleApplied) originalTitle = document.title;
-    document.title = `[${badge}] ${originalTitle}`;
-    titleApplied = true;
   }
 
   function shouldShowWatermark(environment) {
@@ -235,11 +222,12 @@
     const environment = findEnvironment(settings, window.location.href);
     activeEnvironment = environment || null;
     if (!environment) {
+      titleManager.setState({ enabled: false });
       autoFillKey = "";
       return;
     }
 
-    applyTitle(environment);
+    titleManager.setState({ enabled: environment.titlePrefix === true, label: markerLabel(environment) });
     if (shouldShowWatermark(environment)) createWatermark(environment);
     if (shouldShowBadge(environment)) createBadge(environment, settings);
     scheduleDefaultFill(environment);
@@ -532,6 +520,8 @@
     }
     return false;
   });
+
+  titleManager.start();
 
   chrome.storage.local.get([STORAGE_KEY]).then((result) => {
     if (result[STORAGE_KEY]) applyMarkers(result[STORAGE_KEY]);
