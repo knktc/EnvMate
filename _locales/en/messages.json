@@ -270,5 +270,24 @@
     "placeholders": {
       "account": { "content": "$1" }
     }
-  }
+  },
+  "faviconTitle": {"message": "Tab Icon"},
+  "faviconMode": {"message": "Icon mode"},
+  "faviconOriginal": {"message": "Keep original"},
+  "faviconTint": {"message": "Color filter"},
+  "faviconCustom": {"message": "Custom image"},
+  "faviconColor": {"message": "Filter color"},
+  "faviconIntensity": {"message": "Filter intensity"},
+  "faviconUpload": {"message": "Upload ICO, PNG, JPEG or WebP (max 2 MB)"},
+  "faviconClear": {"message": "Clear image"},
+  "faviconPreviewHint": {"message": "Filter preview uses a sample icon. Saved settings apply to the website icon."},
+  "faviconUploadError": {"message": "Cannot read this image. Use ICO, PNG, JPEG or WebP up to 2 MB."},
+  "faviconRegion": {"message": "Recolor area"},
+  "faviconRegionAuto": {"message": "Auto"},
+  "faviconRegionForeground": {"message": "Foreground"},
+  "faviconRegionBackground": {"message": "Background"},
+  "faviconRegionHint": {"message": "Auto detects the background. If the result is wrong, choose an area manually. Transparent backgrounds stay transparent."},
+  "faviconSampleTransparent": {"message": "Transparent icon"},
+  "faviconSampleLight": {"message": "White background"},
+  "faviconSampleColor": {"message": "Colored background"}
 }

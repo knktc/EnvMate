@@ -83,6 +83,14 @@ Badge styles include a corner ribbon, pill, and breathing edge glow. The edge gl
 
 Watermark settings support text, opacity, angle, size, and spacing.
 
+## Tab icons
+
+Choose **Auto**, **Foreground**, or **Background** under the color filter. Auto keeps light backgrounds and recolors their logos, or recolors a continuous dark/colored background while retaining its lettering. Transparent icons keep their alpha. Three 16×16 samples preview transparent, white-background and colored-background cases together. Complex artwork may need manual area selection; Background does not fill transparent areas.
+
+In each environment's **Tab Icon** section, choose the original icon, a color filter, or a custom image. The filter has independent color and intensity controls and preserves brightness and transparency. Its preview uses a sample; matched pages use their own icons. Upload ICO, PNG, JPEG or WebP files up to 2 MB; images are converted to 64×64 PNG and stored locally with the configuration, including duplication and import/export.
+
+Saving updates open matched pages. Disabling the environment, selecting the original icon, or navigating outside matching rules restores the website icon. Existing configurations default to the original icon. Failed image reads leave the original unchanged; icons requiring authentication may need an uploaded replacement. Browser internal pages are unsupported. On install, startup, or configuration save, missing scripts are injected into already-open matched pages without reloading them. This uses the scripting permission; browser internal pages and pages that disallow extensions remain unsupported.
+
 ## Test Accounts
 
 Each environment can store multiple test accounts. Accounts can be reordered, marked as the default fill target, and filled from the popup when the current page matches that environment.

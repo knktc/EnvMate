@@ -29,6 +29,11 @@
       "watermarkSize": 42,
       "watermarkGap": 80,
       "titlePrefix": true,
+      "faviconMode": "original",
+      "faviconRegion": "auto",
+      "faviconColor": "#2563eb",
+      "faviconIntensity": 0.75,
+      "faviconDataUrl": "",
       "markerMode": "badge-watermark",
       "rules": [{ "type": "wildcard", "value": "https://prod.example.com/*" }],
       "accounts": []
@@ -58,6 +63,11 @@
       "watermarkSize": 42,
       "watermarkGap": 80,
       "titlePrefix": true,
+      "faviconMode": "original",
+      "faviconRegion": "auto",
+      "faviconColor": "#2563eb",
+      "faviconIntensity": 0.75,
+      "faviconDataUrl": "",
       "markerMode": "badge",
       "rules": [{ "type": "wildcard", "value": "https://dev.example.com/*" }],
       "accounts": []

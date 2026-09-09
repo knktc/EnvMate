@@ -1,6 +1,47 @@
 const STORAGE_KEY = "envmateSettings";
 const DEFAULT_GROUP_ID = "default";
 
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message?.type !== "ENVMATE_LOAD_FAVICON") return false;
+  if (sender.id !== chrome.runtime.id || !sender.tab) return false;
+  loadFavicon(message.url).then((dataUrl) => sendResponse({ dataUrl }), () => sendResponse({ error: "load_failed" }));
+  return true;
+});
+
+async function loadFavicon(value) {
+  const url = new URL(value);
+  const limit = 2 * 1024 * 1024;
+  if (url.protocol === "data:") {
+    if (value.length > limit || !/^data:image\/(png|jpeg|webp|x-icon|vnd.microsoft.icon);base64,/i.test(value)) throw new Error("Invalid image");
+    return value;
+  }
+  if (!["http:", "https:"].includes(url.protocol)) throw new Error("Invalid protocol");
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 10000);
+  try {
+    const response = await fetch(url.href, { signal: controller.signal, credentials: "omit" });
+    if (!response.ok || Number(response.headers.get("content-length")) > limit) throw new Error("Invalid response");
+    const reader = response.body.getReader();
+    const chunks = [];
+    let size = 0;
+    while (true) {
+      const { done, value: chunk } = await reader.read();
+      if (done) break;
+      size += chunk.length;
+      if (size > limit) { await reader.cancel(); throw new Error("Image too large"); }
+      chunks.push(chunk);
+    }
+    const bytes = new Uint8Array(size);
+    let offset = 0;
+    for (const chunk of chunks) { bytes.set(chunk, offset); offset += chunk.length; }
+    let binary = "";
+    for (let i = 0; i < size; i += 8192) binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
+    const mime = response.headers.get("content-type")?.split(";")[0] || "image/x-icon";
+    if (!/^image\/[a-z0-9.+-]+$/i.test(mime)) throw new Error("Invalid image type");
+    return `data:${mime};base64,${btoa(binary)}`;
+  } finally { clearTimeout(timer); }
+}
+
 const DEFAULT_SETTINGS = {
   groups: [{ id: DEFAULT_GROUP_ID, name: "Default Group" }],
   environments: [
@@ -85,10 +126,12 @@ chrome.runtime.onInstalled.addListener(async () => {
     await chrome.storage.local.set({ [STORAGE_KEY]: DEFAULT_SETTINGS });
   }
   await refreshAllTabIcons();
+  await syncExistingTabs();
 });
 
 chrome.runtime.onStartup.addListener(() => {
   refreshAllTabIcons().catch(() => {});
+  syncExistingTabs().catch(() => {});
 });
 
 chrome.tabs.onActivated.addListener(({ tabId }) => {
@@ -99,6 +142,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo) => {
   if (changeInfo.url || changeInfo.status === "complete") {
     refreshTabIcon(tabId).catch(() => {});
   }
+  if (changeInfo.status === "complete") ensureTabContent(tabId).catch(() => {});
 });
 
 chrome.windows.onFocusChanged.addListener(() => {
@@ -108,8 +152,48 @@ chrome.windows.onFocusChanged.addListener(() => {
 chrome.storage.onChanged.addListener((changes, areaName) => {
   if (areaName === "local" && changes[STORAGE_KEY]) {
     refreshAllTabIcons().catch(() => {});
+    syncExistingTabs().catch(() => {});
   }
 });
+
+const pendingContentInjections = new Map();
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message?.type !== "ENVMATE_SYNC_TABS" || sender.id !== chrome.runtime.id) return false;
+  syncExistingTabs().then(() => sendResponse({ ok: true }), () => sendResponse({ ok: false }));
+  return true;
+});
+
+async function syncExistingTabs() {
+  const tabs = await chrome.tabs.query({});
+  await Promise.allSettled(tabs.filter((tab) => tab.id !== undefined).map((tab) => ensureTabContent(tab.id)));
+}
+
+function ensureTabContent(tabId) {
+  if (pendingContentInjections.has(tabId)) return pendingContentInjections.get(tabId);
+  const pending = (async () => {
+    const tab = await chrome.tabs.get(tabId);
+    if (tab.discarded || tab.status === "loading" || !/^(https?|file):/.test(tab.url || "")) return;
+    const settings = await getSettings();
+    if (!findEnvironment(settings, tab.url)) return;
+    try {
+      const response = await chrome.tabs.sendMessage(tabId, { type: "ENVMATE_PING" }, { frameId: 0 });
+      if (response?.ready) return;
+    } catch (_) {
+      // Already-open pages may not have a content script after install/reload.
+    }
+    const target = { tabId, frameIds: [0] };
+    const files = ["src/content.css"];
+    await chrome.scripting.insertCSS({ target, files });
+    try {
+      await chrome.scripting.executeScript({ target, files: ["src/title-manager.js", "src/favicon-manager.js", "src/content.js"] });
+    } catch (error) {
+      await chrome.scripting.removeCSS({ target, files }).catch(() => {});
+      throw error;
+    }
+  })().finally(() => pendingContentInjections.delete(tabId));
+  pendingContentInjections.set(tabId, pending);
+  return pending;
+}
 
 function wildcardToRegExp(pattern) {
   const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*");

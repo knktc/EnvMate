@@ -267,5 +267,24 @@
     "placeholders": {
       "account": { "content": "$1" }
     }
-  }
+  },
+  "faviconTitle": {"message": "标签页图标"},
+  "faviconMode": {"message": "图标模式"},
+  "faviconOriginal": {"message": "保持原图"},
+  "faviconTint": {"message": "颜色滤镜"},
+  "faviconCustom": {"message": "自定义图片"},
+  "faviconColor": {"message": "滤镜颜色"},
+  "faviconIntensity": {"message": "滤镜强度"},
+  "faviconUpload": {"message": "上传 ICO、PNG、JPEG 或 WebP（最大 2 MB）"},
+  "faviconClear": {"message": "清除图片"},
+  "faviconPreviewHint": {"message": "滤镜使用示例图标预览，保存后应用于网站原图标。"},
+  "faviconUploadError": {"message": "无法读取图片，请选择不超过 2 MB 的 ICO、PNG、JPEG 或 WebP。"},
+  "faviconRegion": {"message": "换色区域"},
+  "faviconRegionAuto": {"message": "自动识别"},
+  "faviconRegionForeground": {"message": "主体换色"},
+  "faviconRegionBackground": {"message": "背景换色"},
+  "faviconRegionHint": {"message": "自动识别背景；效果不合适时可手动选择区域。透明背景保持透明，不额外填色。"},
+  "faviconSampleTransparent": {"message": "透明底图标"},
+  "faviconSampleLight": {"message": "白底彩色图标"},
+  "faviconSampleColor": {"message": "彩底白字图标"}
 }

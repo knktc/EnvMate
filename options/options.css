@@ -2255,3 +2255,11 @@ select:disabled {
     margin-top: 12px;
   }
 }
+
+.favicon-preview { display: flex; align-items: center; gap: 12px; margin-top: 16px; color: #64748b; font-size: 13px; }
+#favicon-error { color: #dc2626; }
+#favicon-tint-controls[hidden], #favicon-upload-controls[hidden] { display: none; }
+.favicon-samples { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; }
+.favicon-samples[hidden] { display: none; }
+.favicon-samples > div { display: grid; gap: 8px; padding: 12px; border: 1px solid #dce5f1; border-radius: 8px; color: #64748b; font-size: 12px; }
+.favicon-samples > div > div { display: flex; align-items: center; gap: 12px; }

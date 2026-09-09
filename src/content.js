@@ -1,8 +1,10 @@
 (function () {
+  if (globalThis.__envmateContentRuntime?.id === chrome.runtime.id) return;
   const STORAGE_KEY = "envmateSettings";
   let activeEnvironment = null;
   let activeSettings = null;
   const titleManager = EnvMateTitleManager.createTitleManager({ document });
+  const faviconManager = EnvMateFavicon.createFaviconManager({ document });
   let lastUrl = window.location.href;
   let autoFillKey = "";
   let autoFillTimer = null;
@@ -221,6 +223,7 @@
 
     const environment = findEnvironment(settings, window.location.href);
     activeEnvironment = environment || null;
+    faviconManager.setState(environment || {});
     if (!environment) {
       titleManager.setState({ enabled: false });
       autoFillKey = "";
@@ -500,6 +503,10 @@
   }
 
   chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+    if (message?.type === "ENVMATE_PING") {
+      sendResponse({ ready: true });
+      return false;
+    }
     if (message?.type === "ENVMATE_GET_PAGE_ENV") {
       sendResponse({ environment: activeEnvironment, url: window.location.href });
       return true;
@@ -522,11 +529,13 @@
   });
 
   titleManager.start();
+  faviconManager.start();
 
   chrome.storage.local.get([STORAGE_KEY]).then((result) => {
     if (result[STORAGE_KEY]) applyMarkers(result[STORAGE_KEY]);
   });
 
+  window.setInterval(refreshForCurrentUrl, 500);
   wrapHistoryMethod("pushState");
   wrapHistoryMethod("replaceState");
   window.addEventListener("popstate", () => setTimeout(refreshForCurrentUrl, 0));
@@ -536,4 +545,5 @@
       applyMarkers(changes[STORAGE_KEY].newValue);
     }
   });
+  globalThis.__envmateContentRuntime = chrome.runtime;
 })();

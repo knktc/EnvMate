@@ -196,6 +196,46 @@
               </div>
               </section>
 
+              <section id="section-favicon" class="form-section">
+                <div class="section-title"><h2 data-i18n="faviconTitle">Tab Icon</h2></div>
+                <div class="field-grid">
+                  <label class="field"><span data-i18n="faviconMode">Icon mode</span><select id="favicon-mode">
+                    <option value="original" data-i18n="faviconOriginal">Original</option>
+                    <option value="tint" data-i18n="faviconTint">Color filter</option>
+                    <option value="custom" data-i18n="faviconCustom">Custom image</option>
+                  </select></label>
+                  <div id="favicon-tint-controls" class="field-grid field--full" hidden>
+                    <label class="field field--full"><span data-i18n="faviconRegion">Recolor area</span>
+                      <select id="favicon-region">
+                        <option value="auto" data-i18n="faviconRegionAuto">Auto</option>
+                        <option value="foreground" data-i18n="faviconRegionForeground">Foreground</option>
+                        <option value="background" data-i18n="faviconRegionBackground">Background</option>
+                      </select>
+                      <span data-i18n="faviconRegionHint">Auto detects the background. If the result is wrong, choose an area manually. Transparent backgrounds stay transparent.</span>
+                    </label>
+                    <label class="field color-field">
+                      <span data-i18n="faviconColor">Color</span>
+                      <div class="color-field__body">
+                        <div id="favicon-color-swatches" class="color-swatches"></div>
+                        <input id="favicon-color" type="color" />
+                      </div>
+                    </label>
+                    <label class="field"><span data-i18n="faviconIntensity">Intensity</span><input id="favicon-intensity" type="range" min="0" max="1" step="0.05" /></label>
+                  </div>
+                  <div id="favicon-upload-controls" hidden>
+                    <label class="field"><span data-i18n="faviconUpload">Upload ICO, PNG, JPEG or WebP (max 2 MB)</span><input id="favicon-upload" type="file" accept=".ico,.png,.jpg,.jpeg,.webp" /></label>
+                    <button id="favicon-clear" type="button" data-i18n="faviconClear">Clear image</button>
+                  </div>
+                </div>
+                <div class="favicon-preview"><img id="favicon-preview" width="32" height="32" alt="" hidden /><span data-i18n="faviconPreviewHint">Filter preview uses a sample icon. Saved settings apply to the website icon.</span></div>
+                <div id="favicon-samples" class="favicon-samples" hidden>
+                  <div><span data-i18n="faviconSampleTransparent">Transparent</span><div><img id="favicon-original-transparent" width="16" height="16" alt="" /><span aria-hidden="true">→</span><img id="favicon-result-transparent" width="16" height="16" alt="" /></div></div>
+                  <div><span data-i18n="faviconSampleLight">White background</span><div><img id="favicon-original-light" width="16" height="16" alt="" /><span aria-hidden="true">→</span><img id="favicon-result-light" width="16" height="16" alt="" /></div></div>
+                  <div><span data-i18n="faviconSampleColor">Colored background</span><div><img id="favicon-original-color" width="16" height="16" alt="" /><span aria-hidden="true">→</span><img id="favicon-result-color" width="16" height="16" alt="" /></div></div>
+                </div>
+                <p id="favicon-error" role="alert" hidden></p>
+              </section>
+
               <section id="section-watermark" class="form-section">
               <div class="section-title section-title--with-toggle">
                 <div>
@@ -279,6 +319,7 @@
                   <button type="button" class="workspace-toolbox__nav-button" data-scroll-target="section-basic" data-i18n="basic">Basic</button>
                   <button type="button" class="workspace-toolbox__nav-button" data-scroll-target="section-rules" data-i18n="urlRules">URL Rules</button>
                   <button type="button" class="workspace-toolbox__nav-button" data-scroll-target="section-badge" data-i18n="badgeConfig">Badge Config</button>
+                  <button type="button" class="workspace-toolbox__nav-button" data-scroll-target="section-favicon" data-i18n="faviconTitle">Tab Icon</button>
                   <button type="button" class="workspace-toolbox__nav-button" data-scroll-target="section-watermark" data-i18n="watermarkConfig">Watermark Config</button>
                   <button type="button" class="workspace-toolbox__nav-button" data-scroll-target="section-accounts" data-i18n="testAccounts">Test Accounts</button>
                 </div>
@@ -486,6 +527,7 @@
     </main>
 
     <script src="../src/i18n.js"></script>
+    <script src="../src/favicon-manager.js"></script>
     <script src="options.js"></script>
   </body>
 </html>

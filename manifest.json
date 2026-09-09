@@ -19,7 +19,7 @@
     "48": "assets/icons/icon-48.png",
     "128": "assets/icons/icon-128-display.png"
   },
-  "permissions": ["storage", "tabs"],
+  "permissions": ["storage", "tabs", "scripting"],
   "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "src/background.js"
@@ -27,7 +27,7 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["src/title-manager.js", "src/content.js"],
+      "js": ["src/title-manager.js", "src/favicon-manager.js", "src/content.js"],
       "css": ["src/content.css"],
       "run_at": "document_idle"
     }

@@ -1609,6 +1609,7 @@ function normalizeSettings(value) {
       watermarkSize: Number(environment.watermarkSize ?? value.appearance?.watermarkSize ?? 42),
       watermarkGap: Number(environment.watermarkGap ?? value.appearance?.watermarkGap ?? 80),
       titlePrefix: environment.titlePrefix !== false,
+      ...EnvMateFavicon.normalize(environment),
       rules: Array.isArray(environment.rules) ? environment.rules : [],
       accounts: Array.isArray(environment.accounts)
         ? environment.accounts.map((account) => {
@@ -2496,6 +2497,63 @@ function renderMarkerPreviews() {
   nodes.watermarkPreviewSurface.append(watermarkCanvas);
 }
 
+let faviconPreviewVersion = 0;
+let faviconUploadVersion = 0;
+const faviconNode = (name) => document.getElementById(`favicon-${name}`);
+const faviconSamples = new Map();
+function faviconSample(kind) {
+  if (faviconSamples.has(kind)) return faviconSamples.get(kind);
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = 64;
+  const context = canvas.getContext("2d");
+  if (kind !== "transparent") {
+    context.fillStyle = kind === "light" ? "#ffffff" : "#2563eb";
+    context.fillRect(0, 0, 64, 64);
+  }
+  context.fillStyle = kind === "transparent" ? "#111827" : kind === "light" ? "#7c8fd0" : "#ffffff";
+  context.font = "bold 50px sans-serif";
+  context.textAlign = "center";
+  context.fillText("E", 32, 50);
+  const source = canvas.toDataURL("image/png");
+  faviconSamples.set(kind, source);
+  return source;
+}
+function renderFaviconControls() {
+  const environment = selectedEnvironment();
+  if (!environment) return;
+  const config = EnvMateFavicon.normalize(environment);
+  faviconNode("mode").value = config.faviconMode;
+  faviconNode("region").value = config.faviconRegion;
+  faviconNode("color").value = config.faviconColor;
+  renderColorSwatches(faviconNode("color-swatches"), ENVIRONMENT_COLOR_PRESETS, config.faviconColor, (color) => {
+    updateSelectedEnvironment({ faviconColor: color });
+    renderFaviconControls();
+  });
+  faviconNode("intensity").value = config.faviconIntensity;
+  faviconNode("tint-controls").hidden = config.faviconMode !== "tint";
+  faviconNode("upload-controls").hidden = config.faviconMode !== "custom";
+  faviconNode("error").hidden = true;
+  const preview = faviconNode("preview");
+  preview.hidden = true;
+  const version = ++faviconPreviewVersion;
+  faviconNode("samples").hidden = config.faviconMode !== "tint";
+  if (config.faviconMode === "tint") {
+    for (const kind of ["transparent", "light", "color"]) {
+      const sample = faviconSample(kind);
+      faviconNode(`original-${kind}`).src = sample;
+      EnvMateFavicon.renderImage(sample, config).then((url) => {
+        if (version === faviconPreviewVersion) faviconNode(`result-${kind}`).src = url;
+      }).catch(() => {});
+    }
+  }
+  const source = config.faviconMode === "custom" ? config.faviconDataUrl : "../assets/icons/icon-48.png";
+  if (config.faviconMode !== "original" && source) {
+    EnvMateFavicon.renderImage(source, config).then((url) => {
+      if (version !== faviconPreviewVersion) return;
+      preview.src = url; preview.hidden = false;
+    }).catch(() => {});
+  }
+}
 function renderForm() {
   const environment = selectedEnvironment();
   const hasEnvironment = Boolean(environment);
@@ -2528,6 +2586,7 @@ function renderForm() {
   nodes.enabled.checked = environment.enabled !== false;
   syncEnabledLabel();
   nodes.titlePrefix.checked = environment.titlePrefix;
+  renderFaviconControls();
   syncBadgeStyleOptions(environment.badgeStyle);
   nodes.badgePosition.value = environment.badgePosition;
   nodes.badgeScale.value = environment.badgeScale;
@@ -2721,6 +2780,8 @@ async function saveSettings() {
   }
   settings = normalizeSettings(settings);
   await persistSettingsSnapshot();
+  // Also repair missing page scripts when Save does not change stored values.
+  await chrome.runtime.sendMessage({ type: "ENVMATE_SYNC_TABS" }).catch(() => {});
   clearBasicValidationError();
   clearAccountsValidationError();
   render();
@@ -2827,6 +2888,36 @@ bindNodeEvent(nodes.enabled, "change", async () => {
   await setSelectedEnvironmentEnabled(nodes.enabled.checked);
 });
 bindNodeEvent(nodes.titlePrefix, "change", () => updateSelectedEnvironment({ titlePrefix: nodes.titlePrefix.checked }));
+
+for (const [name, field] of [["mode", "faviconMode"], ["region", "faviconRegion"], ["color", "faviconColor"], ["intensity", "faviconIntensity"]]) {
+  faviconNode(name).addEventListener("input", () => {
+    updateSelectedEnvironment({ [field]: name === "intensity" ? Number(faviconNode(name).value) : faviconNode(name).value });
+    renderFaviconControls();
+  });
+}
+faviconNode("clear").addEventListener("click", () => {
+  ++faviconUploadVersion;
+  updateSelectedEnvironment({ faviconDataUrl: "", faviconMode: "original" });
+  faviconNode("upload").value = "";
+  renderFaviconControls();
+});
+faviconNode("upload").addEventListener("change", async () => {
+  const environment = selectedEnvironment();
+  const version = ++faviconUploadVersion;
+  const file = faviconNode("upload").files[0];
+  faviconNode("upload").value = "";
+  if (!file || !environment) return;
+  try {
+    const dataUrl = await EnvMateFavicon.upload(file);
+    if (version !== faviconUploadVersion || selectedEnvironment() !== environment) return;
+    updateSelectedEnvironment({ faviconDataUrl: dataUrl, faviconMode: "custom" });
+    renderFaviconControls();
+  } catch (_) {
+    if (version !== faviconUploadVersion || selectedEnvironment() !== environment) return;
+    faviconNode("error").textContent = t("faviconUploadError");
+    faviconNode("error").hidden = false;
+  }
+});
 
 bindNodeEvent(nodes.badgePosition, "change", () => {
   updateSelectedEnvironment({ badgePosition: nodes.badgePosition.value });
