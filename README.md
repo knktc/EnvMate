@@ -56,6 +56,7 @@ Many internal systems look nearly identical across dev, test, pre-release, and p
 
 ## Changelog
 
+- 2026-09-10 · v0.5.5: Added a focus-aware breathing highlight that makes the active configuration section clear while editing.
 - 2026-09-09 · v0.5.4: Fixed environment title prefixes disappearing when pages update their titles or replace the title element.
 - 2026-08-31 · v0.5.3: Fixed newly created groups not being saved immediately.
 - 2026-08-12 · v0.5.1: Fixed Quick Access expansion causing the popup window to become wider.

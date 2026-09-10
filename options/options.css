@@ -1283,8 +1283,52 @@ button:hover,
 }
 
 .form-section {
+  position: relative;
   padding: 14px;
   scroll-margin-top: 18px;
+  transition: border-color 180ms ease;
+}
+
+.form-section::after {
+  position: absolute;
+  inset: -2px;
+  border: 2px solid rgba(37, 99, 235, 0.58);
+  border-radius: 10px;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.06), 0 0 16px rgba(37, 99, 235, 0.1);
+  content: "";
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease;
+}
+
+.form-section:focus-within {
+  border-color: #bfdbfe;
+}
+
+.form-section:focus-within::after {
+  animation: envmate-section-focus-breathe 900ms ease-in-out 2;
+  animation-fill-mode: both;
+}
+
+@keyframes envmate-section-focus-breathe {
+  0%,
+  100% {
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.06), 0 0 16px rgba(37, 99, 235, 0.1);
+    opacity: 0.72;
+  }
+
+  50% {
+    box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12), 0 0 22px rgba(37, 99, 235, 0.22);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .form-section:focus-within::after {
+    animation: none;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.06), 0 0 16px rgba(37, 99, 235, 0.1);
+    opacity: 0.72;
+  }
 }
 
 .section-title {
