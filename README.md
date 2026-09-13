@@ -32,7 +32,7 @@
 
 - Detect environments by URL rules.
 - Show a badge, watermark, or both on matched pages.
-- Optionally prefix the page title with the environment label.
+- Manage browser-tab titles and favicons independently from page badges.
 - Manage grouped environments from a dedicated options page.
 - Store multiple test accounts per environment and fill them on demand.
 - Show the matched environment directly in the extension popup.
@@ -56,6 +56,7 @@ Many internal systems look nearly identical across dev, test, pre-release, and p
 
 ## Changelog
 
+- 2026-09-13 · v0.6.0: Added tab configuration for customizing the browser tab favicon, title prefix, and title. Fixed some bugs.
 - 2026-09-10 · v0.5.5: Added a focus-aware breathing highlight that makes the active configuration section clear while editing.
 - 2026-09-09 · v0.5.4: Fixed environment title prefixes disappearing when pages update their titles or replace the title element.
 - 2026-08-31 · v0.5.3: Fixed newly created groups not being saved immediately.
@@ -83,6 +84,30 @@ Many internal systems look nearly identical across dev, test, pre-release, and p
 Badge styles include a corner ribbon, pill, and breathing edge glow. The edge glow uses the badge color and respects the badge size and opacity settings.
 
 Watermark settings support text, opacity, angle, size, and spacing.
+
+## Tab Management
+
+Each environment may include a `tabDisplay` object. The top-level switch controls both title and favicon changes; disabling it restores the website's original values without deleting the saved configuration.
+
+```json
+{
+  "tabDisplay": {
+    "enabled": true,
+    "favicon": {
+      "enabled": true,
+      "source": "preset",
+      "type": "solid-rounded-square",
+      "value": "#059669"
+    },
+    "title": {
+      "prefix": "[TEST] ",
+      "override": ""
+    }
+  }
+}
+```
+
+Favicon sources are `emoji`, `preset`, and `upload`. Preset favicons currently offer Square (`solid-rounded-square`) and Circle (`solid-circle`) shapes, sharing the same color value. Uploaded source files are limited to 2 MB, converted locally to square PNG data URLs below 256 KB, and travel with the configuration during export/import; no image is uploaded or fetched remotely. A blank `override` keeps the page's current title, while `prefix` is concatenated exactly as entered. Whenever `prefix` is empty, focusing the field fills the `[]` template; clearing it allows the template to appear again on the next focus.
 
 ## Test Accounts
 

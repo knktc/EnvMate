@@ -2,7 +2,7 @@
   const STORAGE_KEY = "envmateSettings";
   let activeEnvironment = null;
   let activeSettings = null;
-  const titleManager = EnvMateTitleManager.createTitleManager({ document });
+  const tabDisplayManager = EnvMateTabDisplayManager.createTabDisplayManager({ document });
   let lastUrl = window.location.href;
   let autoFillKey = "";
   let autoFillTimer = null;
@@ -72,6 +72,17 @@
     const watermarkText = typeof environment?.watermarkText === "string" ? environment.watermarkText.trim() : "";
     const name = typeof environment?.name === "string" ? environment.name.trim() : "";
     return watermarkText || name || t("environmentFallback");
+  }
+
+  function tabDisplayState(environment) {
+    const config = EnvMateTabDisplayConfig.normalizeTabDisplay(environment, markerLabel(environment));
+    return {
+      enabled: config.enabled,
+      faviconEnabled: config.favicon.enabled,
+      favicon: config.favicon,
+      prefix: config.title.prefix,
+      override: config.title.override
+    };
   }
 
   function accountDisplayLabel(account) {
@@ -196,7 +207,7 @@
     wrap.className = "envmate-watermark";
     wrap.dataset.envmateRoot = "watermark";
     wrap.style.setProperty("--envmate-watermark-color", environment.watermarkColor || environment.color || "#2563eb");
-    wrap.style.setProperty("--envmate-watermark-opacity", environment.watermarkOpacity ?? 0.08);
+    wrap.style.setProperty("--envmate-watermark-opacity", environment.watermarkOpacity ?? 0.06);
     wrap.style.setProperty("--envmate-watermark-angle", `${environment.watermarkAngle ?? -24}deg`);
     wrap.style.setProperty("--envmate-watermark-size", `${environment.watermarkSize ?? 42}px`);
     wrap.style.setProperty("--envmate-watermark-gap", `${environment.watermarkGap ?? 80}px`);
@@ -222,12 +233,12 @@
     const environment = findEnvironment(settings, window.location.href);
     activeEnvironment = environment || null;
     if (!environment) {
-      titleManager.setState({ enabled: false });
+      tabDisplayManager.setState({ enabled: false, faviconEnabled: false, prefix: "", override: "" });
       autoFillKey = "";
       return;
     }
 
-    titleManager.setState({ enabled: environment.titlePrefix === true, label: markerLabel(environment) });
+    tabDisplayManager.setState(tabDisplayState(environment));
     if (shouldShowWatermark(environment)) createWatermark(environment);
     if (shouldShowBadge(environment)) createBadge(environment, settings);
     scheduleDefaultFill(environment);
@@ -521,7 +532,7 @@
     return false;
   });
 
-  titleManager.start();
+  tabDisplayManager.start();
 
   chrome.storage.local.get([STORAGE_KEY]).then((result) => {
     if (result[STORAGE_KEY]) applyMarkers(result[STORAGE_KEY]);

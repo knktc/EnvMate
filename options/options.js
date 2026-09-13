@@ -7,6 +7,18 @@ const TEXT_COLOR_PRESETS = ["#ffffff", "#f8fafc", "#e2e8f0", "#111827", "#0f172a
 const EXPORTED_PASSWORD_SCHEME = "emsec";
 const EXPORTED_PASSWORD_VERSION = "v1";
 const EXPORTED_PASSWORD_KEY_V1 = "EnvMate export password v1";
+const TAB_DISPLAY_CONFIG = window.EnvMateTabDisplayConfig;
+const TAB_FAVICON_COLOR_PRESETS = ["#2563eb", "#059669", "#dc2626", "#7c3aed", "#ea580c", "#0f766e", "#db2777", "#0f172a", "#ca8a04", "#64748b"];
+const TAB_EMOJI_OPTIONS = [
+  ["🧪", "test"], ["🚧", "staging"], ["🚀", "release"], ["🌱", "dev"], ["🔬", "qa"], ["🛠️", "tools"],
+  ["🏭", "prod"], ["🔒", "secure"], ["⚡", "fast"], ["🔥", "hot"], ["🌈", "color"], ["🧭", "navigation"],
+  ["💾", "database"], ["☁️", "cloud"], ["🧩", "extension"], ["📦", "package"], ["✅", "ok"], ["⚠️", "warning"],
+  ["🟢", "green"], ["🔵", "blue"], ["🟠", "orange"], ["🟣", "purple"], ["🟡", "yellow"], ["🔴", "red"],
+  ["🧑‍💻", "developer"], ["💻", "computer"], ["🖥️", "desktop"], ["🌐", "web"], ["🏢", "office"], ["🏠", "home"],
+  ["🟩", "green square"], ["🟦", "blue square"], ["🟨", "yellow square"], ["🟥", "red square"], ["❌", "error"], ["❗", "important"],
+  ["🔔", "notification"], ["🐛", "bug"], ["🧰", "toolbox"], ["⚙️", "settings"], ["🔧", "wrench"], ["🧱", "build"],
+  ["🧬", "science"], ["🧫", "lab"], ["🗄️", "storage"], ["📊", "metrics"], ["📡", "signal"], ["🔑", "key"]
+];
 const LUCIDE_ICON_ATTRS = {
   fill: "none",
   stroke: "currentColor",
@@ -18,6 +30,12 @@ const LUCIDE_ICON_NODES = {
   plus: [
     ["path", { d: "M12 5v14" }],
     ["path", { d: "M5 12h14" }]
+  ],
+  globe: [
+    ["circle", { cx: "12", cy: "12", r: "10" }],
+    ["path", { d: "M2 12h20" }],
+    ["path", { d: "M12 2a15.3 15.3 0 0 1 0 20" }],
+    ["path", { d: "M12 2a15.3 15.3 0 0 0 0 20" }]
   ],
   flaskConical: [
     ["path", { d: "M10 2v7.31" }],
@@ -44,6 +62,11 @@ const LUCIDE_ICON_NODES = {
   badgeHelp: [
     ["circle", { cx: "12", cy: "12", r: "10" }],
     ["path", { d: "M9.09 9a3 3 0 0 1 5.82 1c0 2-3 3-3 3" }],
+    ["path", { d: "M12 17h.01" }]
+  ],
+  triangleAlert: [
+    ["path", { d: "m21.73 18-8-14a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3" }],
+    ["path", { d: "M12 9v4" }],
     ["path", { d: "M12 17h.01" }]
   ],
   edit: [
@@ -110,7 +133,37 @@ const nodes = {
   badgeEnabled: document.querySelector("#env-badge-enabled"),
   enabled: document.querySelector("#env-enabled"),
   enabledLabel: document.querySelector("#env-enabled-label"),
+  tabDisplayEnabled: document.querySelector("#env-tab-display-enabled"),
+  faviconButton: document.querySelector("#tab-favicon-button"),
+  faviconButtonIcon: document.querySelector("#tab-favicon-button-icon"),
+  faviconButtonOriginal: document.querySelector("#tab-favicon-button-original"),
+  faviconPopover: document.querySelector("#tab-favicon-popover"),
+  faviconPopoverClose: document.querySelector("#tab-favicon-popover-close"),
+  faviconTabs: Array.from(document.querySelectorAll("[data-favicon-source]")),
+  titleWarning: document.querySelector("#tab-title-warning"),
+  titleWarningIcon: document.querySelector("#tab-title-warning-icon"),
   titlePrefix: document.querySelector("#env-title-prefix"),
+  titleOverride: document.querySelector("#env-title-override"),
+  emojiCustom: document.querySelector("#tab-emoji-custom"),
+  emojiCustomStatus: document.querySelector("#tab-emoji-custom-status"),
+  emojiPicker: document.querySelector("#tab-emoji-picker"),
+  emojiControls: document.querySelector("#tab-emoji-controls"),
+  presetControls: document.querySelector("#tab-preset-controls"),
+  presetType: document.querySelector("#tab-preset-type"),
+  presetColor: document.querySelector("#tab-preset-color"),
+  presetColorText: document.querySelector("#tab-preset-color-text"),
+  presetColorSwatches: document.querySelector("#tab-preset-color-swatches"),
+  uploadControls: document.querySelector("#tab-upload-controls"),
+  uploadDropzone: document.querySelector("#tab-upload-dropzone"),
+  uploadDropzoneIcon: document.querySelector("#tab-upload-dropzone-icon"),
+  uploadDropzoneTitle: document.querySelector("#tab-upload-dropzone-title"),
+  uploadDropzoneHint: document.querySelector("#tab-upload-dropzone-hint"),
+  uploadDropzonePreview: document.querySelector("#tab-upload-preview"),
+  uploadDropzonePreviewImage: document.querySelector("#tab-upload-preview-image"),
+  uploadDropzoneReselect: document.querySelector("#tab-upload-reselect"),
+  faviconFile: document.querySelector("#tab-favicon-file"),
+  uploadStatus: document.querySelector("#tab-upload-status"),
+  faviconReset: document.querySelector("#tab-favicon-reset"),
   rules: document.querySelector("#rules-list"),
   accounts: document.querySelector("#accounts-list"),
   basicValidation: document.querySelector("#basic-validation"),
@@ -119,6 +172,7 @@ const nodes = {
   badgeColorSwatches: document.querySelector("#badge-color-swatches"),
   badgeTextColor: document.querySelector("#badge-text-color"),
   badgeTextColorSwatches: document.querySelector("#badge-text-color-swatches"),
+  badgeLayout: document.querySelector("#badge-layout"),
   badgePosition: document.querySelector("#badge-position"),
   badgeStyleOptions: Array.from(document.querySelectorAll("input[name='badge-style']")),
   badgeScale: document.querySelector("#badge-scale"),
@@ -127,6 +181,7 @@ const nodes = {
   watermarkText: document.querySelector("#env-watermark-text"),
   watermarkColor: document.querySelector("#watermark-color"),
   watermarkColorSwatches: document.querySelector("#watermark-color-swatches"),
+  watermarkLayout: document.querySelector("#watermark-layout"),
   watermarkEnabled: document.querySelector("#env-watermark-enabled"),
   watermarkOpacity: document.querySelector("#watermark-opacity"),
   watermarkAngle: document.querySelector("#watermark-angle"),
@@ -134,6 +189,13 @@ const nodes = {
   watermarkGap: document.querySelector("#watermark-gap"),
   badgePreviewSurface: document.querySelector("#badge-preview-surface"),
   watermarkPreviewSurface: document.querySelector("#watermark-preview-surface"),
+  tabDisplayPreview: document.querySelector("#tab-display-preview"),
+  tabBrowserPreview: document.querySelector("#tab-browser-preview"),
+  tabBrowserPreviewContextIcon: document.querySelector("#tab-browser-preview-context-icon"),
+  tabBrowserPreviewFavicon: document.querySelector("#tab-browser-preview-favicon"),
+  tabBrowserPreviewTitle: document.querySelector("#tab-browser-preview-title"),
+  tabBrowserPreviewClose: document.querySelector("#tab-browser-preview-close"),
+  tabBrowserPreviewPlus: document.querySelector("#tab-browser-preview-plus"),
   sectionNavButtons: Array.from(document.querySelectorAll("[data-scroll-target]")),
   workspaceShell: document.querySelector(".workspace-shell"),
   toolbox: document.querySelector("#workspace-toolbox"),
@@ -206,6 +268,12 @@ let urlImportErrorMessage = "";
 let urlImportScopeMode = "all";
 let activeModalName = "";
 let importSuccessToastTimer = 0;
+let activeFaviconSource = "emoji";
+let faviconPopoverOpen = false;
+let prefixFocusToken = 0;
+const uploadFileNames = new Map();
+const uploadTransientStates = new Map();
+let uploadDragDepth = 0;
 
 function syncLocaleSwitcher() {
   if (!nodes.localeSwitcher || !window.envmateI18n?.getLocaleChoice) return;
@@ -232,6 +300,100 @@ function pickEnvironmentColor() {
 
 function clone(value) {
   return JSON.parse(JSON.stringify(value));
+}
+
+function tabDisplayTitle(environment) {
+  const title = environment?.tabDisplay?.title;
+  return title && typeof title === "object" ? title : { prefix: "", override: "" };
+}
+
+function tabDisplayFavicon(environment) {
+  const favicon = environment?.tabDisplay?.favicon;
+  return favicon && typeof favicon === "object"
+    ? favicon
+    : { enabled: false, source: "preset", type: TAB_DISPLAY_CONFIG.DEFAULT_PRESET_TYPE, value: TAB_DISPLAY_CONFIG.DEFAULT_COLOR };
+}
+
+function importedFaviconError(errors) {
+  const first = errors[0];
+  const environmentName = first?.name || first?.id || t("environmentFallback");
+  return t("invalidImportedFavicon", [environmentName]);
+}
+
+function decodeImageDataUrl(dataUrl) {
+  const parsed = TAB_DISPLAY_CONFIG.parseUploadDataUrl(dataUrl);
+  if (!parsed.valid || typeof Image === "undefined" || typeof URL === "undefined" || typeof Blob === "undefined") {
+    return Promise.resolve(Boolean(parsed.valid));
+  }
+  return new Promise((resolve) => {
+    const objectUrl = URL.createObjectURL(new Blob([parsed.bytes], { type: parsed.mime }));
+    const image = new Image();
+    const finish = (valid) => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(valid && image.naturalWidth > 0 && image.naturalHeight > 0);
+    };
+    image.onload = () => finish(true);
+    image.onerror = () => finish(false);
+    image.src = objectUrl;
+  });
+}
+
+async function validateImportedTabDisplays(value) {
+  const errors = TAB_DISPLAY_CONFIG.validateSettings(value);
+  if (errors.length) throw new Error(importedFaviconError(errors));
+  const environments = Array.isArray(value?.environments) ? value.environments : [];
+  for (const environment of environments) {
+    const favicon = environment?.tabDisplay?.favicon;
+    if (!favicon || favicon.source !== "upload") continue;
+    if (!(await decodeImageDataUrl(favicon.value))) {
+      throw new Error(t("invalidImportedFavicon", [environment?.name || environment?.id || t("environmentFallback")]));
+    }
+  }
+}
+
+function fileToDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error(t("invalidUploadedFavicon")));
+    reader.readAsDataURL(file);
+  });
+}
+
+function loadImage(dataUrl) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error(t("invalidUploadedFavicon")));
+    image.src = dataUrl;
+  });
+}
+
+async function normalizeUploadedFavicon(file) {
+  if (!file) return null;
+  if (!TAB_DISPLAY_CONFIG.isRawUploadSizeAllowed(file.size)) throw new Error(t("uploadedFaviconTooLarge"));
+  if (!["image/png", "image/jpeg", "image/webp"].includes(String(file.type || "").toLowerCase())) {
+    throw new Error(t("unsupportedUploadedFavicon"));
+  }
+  const image = await loadImage(await fileToDataUrl(file));
+  const size = 64;
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error(t("invalidUploadedFavicon"));
+  const sourceSize = Math.min(image.naturalWidth || image.width, image.naturalHeight || image.height);
+  const sourceX = ((image.naturalWidth || image.width) - sourceSize) / 2;
+  const sourceY = ((image.naturalHeight || image.height) - sourceSize) / 2;
+  context.clearRect(0, 0, size, size);
+  context.drawImage(image, sourceX, sourceY, sourceSize, sourceSize, 0, 0, size, size);
+  const value = canvas.toDataURL("image/png");
+  const parsed = TAB_DISPLAY_CONFIG.parseUploadDataUrl(value);
+  if (!parsed.valid) {
+    if (parsed.reason === "size-limit") throw new Error(t("normalizedFaviconTooLarge"));
+    throw new Error(t("invalidUploadedFavicon"));
+  }
+  return value;
 }
 
 function bytesToBase64(bytes) {
@@ -438,6 +600,19 @@ function selectedEnvironmentTotal(groups, selectionState) {
   }, 0);
 }
 
+function importEnvironmentMeta(environment) {
+  const parts = [];
+  const tabDisplay = environment?.tabDisplay;
+  const favicon = tabDisplay?.favicon;
+  const title = tabDisplay?.title;
+  if (favicon?.enabled === true) {
+    parts.push(favicon.source === "upload" ? t("importCustomFavicon") : t("importFavicon"));
+  }
+  if (String(title?.prefix || "").trim()) parts.push(t("importTitlePrefix"));
+  if (String(title?.override || "").trim()) parts.push(t("importCustomTitle"));
+  return parts.join(" · ");
+}
+
 function renderSelectionTree(container, groups, selectionState, options = {}) {
   container.innerHTML = "";
   container.classList.toggle("selection-tree--empty", !groups.length);
@@ -541,7 +716,9 @@ function renderSelectionTree(container, groups, selectionState, options = {}) {
         childTitle.textContent = environment.name || t("environmentFallback");
         const childMeta = document.createElement("span");
         childMeta.className = "selection-environment__meta";
-        childMeta.textContent = environment.rules?.[0]?.value || t("noUrlRules");
+        const ruleMeta = environment.rules?.[0]?.value || t("noUrlRules");
+        const tabMeta = importEnvironmentMeta(environment);
+        childMeta.textContent = tabMeta ? `${ruleMeta} · ${tabMeta}` : ruleMeta;
         childSummary.append(childTitle, childMeta);
         child.append(childCheckbox, childIcon, childSummary);
 
@@ -751,6 +928,7 @@ function clearImportPreview() {
 
 function resetFileImportState() {
   clearImportPreview();
+  nodes.importDropzone.classList.remove("is-error");
   nodes.importSelectionList.classList.add("selection-tree--empty");
   nodes.importSelectionList.innerHTML = `<div class="empty">${t("importNoFile")}</div>`;
   nodes.importDropzoneDetail.textContent = t("importDropzoneHint");
@@ -898,7 +1076,9 @@ function closeImportModal() {
 async function readImportFile(file) {
   if (!file) return;
   try {
-    const parsed = decodeImportedSettings(JSON.parse(await file.text()));
+    const raw = JSON.parse(await file.text());
+    await validateImportedTabDisplays(raw);
+    const parsed = decodeImportedSettings(raw);
     importPreviewSettings = normalizeSettings(parsed);
     importSelectionState = createSelectionState(groupedEnvironments(importPreviewSettings));
     importPreviewSource = "file";
@@ -906,6 +1086,8 @@ async function readImportFile(file) {
     syncImportModalState();
   } catch (error) {
     resetFileImportState();
+    nodes.importDropzone.classList.add("is-error");
+    nodes.importDropzoneDetail.textContent = error.message;
     syncImportModalState();
     setStatus(error.message, true);
   }
@@ -946,6 +1128,7 @@ async function loadUrlImportPreview(urlValue, savedSelections = null, savedScope
     if (!raw || typeof raw !== "object" || Array.isArray(raw)) {
       throw new Error(t("urlImportInvalidConfig"));
     }
+    await validateImportedTabDisplays(raw);
     const parsed = decodeImportedSettings(raw);
     const normalized = normalizeSettings(parsed);
     const groups = groupedEnvironments(normalized);
@@ -1078,6 +1261,25 @@ function syncEnabledLabel() {
 
 function selectedBadgeStyle() {
   return nodes.badgeStyleOptions.find((option) => option.checked)?.value || "slanted";
+}
+
+function syncMarkerLayoutControls(container, enabled) {
+  if (!container) return;
+  const disabled = !enabled;
+  container.querySelectorAll("input, select, button, textarea").forEach((control) => {
+    control.disabled = disabled;
+  });
+  container.setAttribute("aria-disabled", String(disabled));
+  container.classList.toggle("is-disabled", disabled);
+}
+
+function syncMarkerControlStates() {
+  const badgeEnabled = nodes.badgeEnabled.checked;
+  syncMarkerLayoutControls(nodes.badgeLayout, badgeEnabled);
+  if (nodes.badgePosition) {
+    nodes.badgePosition.disabled = !badgeEnabled || selectedBadgeStyle() === "edge-glow";
+  }
+  syncMarkerLayoutControls(nodes.watermarkLayout, nodes.watermarkEnabled.checked);
 }
 
 function syncBadgeStyleOptions(value) {
@@ -1273,6 +1475,9 @@ function syncRailNav() {
   nodes.sectionNavButtons.forEach((button) => {
     button.classList.toggle("is-active", button.dataset.scrollTarget === activeSectionId);
   });
+  nodes.form?.querySelectorAll(".form-section").forEach((section) => {
+    section.classList.toggle("is-nav-active", section.id === activeSectionId);
+  });
 }
 
 function navSections() {
@@ -1428,11 +1633,15 @@ function buildLocalizedSampleGroup() {
         watermarkText: prodName,
         watermarkEnabled: true,
         watermarkColor: "#dc2626",
-        watermarkOpacity: 0.08,
+        watermarkOpacity: 0.06,
         watermarkAngle: -24,
         watermarkSize: 42,
         watermarkGap: 80,
-        titlePrefix: true,
+        tabDisplay: {
+          enabled: true,
+          favicon: { enabled: false, source: "preset", type: TAB_DISPLAY_CONFIG.DEFAULT_PRESET_TYPE, value: "#dc2626" },
+          title: { prefix: "[PROD] ", override: "" }
+        },
         markerMode: "badge-watermark",
         rules: [{ type: "wildcard", value: "https://prod.example.com/*" }],
         accounts: [
@@ -1472,11 +1681,15 @@ function buildLocalizedSampleGroup() {
         watermarkText: devName,
         watermarkEnabled: false,
         watermarkColor: "#2563eb",
-        watermarkOpacity: 0.08,
+        watermarkOpacity: 0.06,
         watermarkAngle: -24,
         watermarkSize: 42,
         watermarkGap: 80,
-        titlePrefix: true,
+        tabDisplay: {
+          enabled: true,
+          favicon: { enabled: false, source: "preset", type: TAB_DISPLAY_CONFIG.DEFAULT_PRESET_TYPE, value: "#2563eb" },
+          title: { prefix: "[DEV] ", override: "" }
+        },
         markerMode: "badge",
         rules: [{ type: "wildcard", value: "https://dev.example.com/*" }],
         accounts: [
@@ -1555,12 +1768,13 @@ function ensureGroupId(groupId, groups) {
 }
 
 function normalizeSettings(value) {
+  const source = value && typeof value === "object" ? value : {};
   const next = {
     groups: [],
-    environments: Array.isArray(value.environments) ? value.environments : []
+    environments: Array.isArray(source.environments) ? source.environments : []
   };
 
-  next.groups = buildGroups(value.groups, next.environments);
+  next.groups = buildGroups(source.groups, next.environments);
   const legacyGroupMap = new Map(next.groups.map((group) => [group.name, group.id]));
 
   next.environments = next.environments.map((environment) => {
@@ -1592,23 +1806,26 @@ function normalizeSettings(value) {
       badgeEnabled,
       badgeColor: environment.badgeColor || environment.color || "#2563eb",
       badgeTextColor: environment.badgeTextColor || environment.textColor || "#ffffff",
-      badgeStyle: environment.badgeStyle || value.appearance?.badgeStyle || "slanted",
-      badgePosition: environment.badgePosition || value.appearance?.badgePosition || "top-right",
+      badgeStyle: environment.badgeStyle || source.appearance?.badgeStyle || "slanted",
+      badgePosition: environment.badgePosition || source.appearance?.badgePosition || "top-right",
       badgeScale: Number(environment.badgeScale ?? 1),
       badgeSize: Number(environment.badgeSize ?? 14),
-      badgeOffset: Number(environment.badgeOffset ?? value.appearance?.badgeOffset ?? 12),
-      badgeOpacity: Number(environment.badgeOpacity ?? value.appearance?.badgeOpacity ?? 1),
+      badgeOffset: Number(environment.badgeOffset ?? source.appearance?.badgeOffset ?? 12),
+      badgeOpacity: Number(environment.badgeOpacity ?? source.appearance?.badgeOpacity ?? 1),
       watermarkText:
         typeof environment.watermarkText === "string"
           ? environment.watermarkText
           : environment.name || t("newEnvironment"),
       watermarkEnabled,
       watermarkColor: environment.watermarkColor || environment.color || "#2563eb",
-      watermarkOpacity: Number(environment.watermarkOpacity ?? value.appearance?.watermarkOpacity ?? 0.08),
-      watermarkAngle: Number(environment.watermarkAngle ?? value.appearance?.watermarkAngle ?? -24),
-      watermarkSize: Number(environment.watermarkSize ?? value.appearance?.watermarkSize ?? 42),
-      watermarkGap: Number(environment.watermarkGap ?? value.appearance?.watermarkGap ?? 80),
-      titlePrefix: environment.titlePrefix !== false,
+      watermarkOpacity: Number(environment.watermarkOpacity ?? source.appearance?.watermarkOpacity ?? 0.06),
+      watermarkAngle: Number(environment.watermarkAngle ?? source.appearance?.watermarkAngle ?? -24),
+      watermarkSize: Number(environment.watermarkSize ?? source.appearance?.watermarkSize ?? 42),
+      watermarkGap: Number(environment.watermarkGap ?? source.appearance?.watermarkGap ?? 80),
+      tabDisplay: TAB_DISPLAY_CONFIG.normalizeTabDisplay(
+        environment,
+        markerLabel({ badge: environment.badge, name: environment.name })
+      ),
       rules: Array.isArray(environment.rules) ? environment.rules : [],
       accounts: Array.isArray(environment.accounts)
         ? environment.accounts.map((account) => {
@@ -1684,6 +1901,12 @@ function applyIconOnlyButton(button, iconName) {
   button.append(createLucideIcon(iconName));
 }
 
+function applyIconOnlyNode(node, iconName, className) {
+  if (!node) return;
+  node.textContent = "";
+  node.append(createLucideIcon(iconName, className));
+}
+
 function applyInlineStatusIcon(container, iconName, label) {
   if (!container) return;
   container.textContent = "";
@@ -1708,6 +1931,10 @@ function decorateStaticButtons() {
   applyIconOnlyButton(nodes.exportModalClose, "x");
   applyIconOnlyButton(nodes.importModalClose, "x");
   applyIconOnlyButton(nodes.aboutModalClose, "x");
+  applyIconOnlyNode(nodes.titleWarningIcon, "triangleAlert", "tab-title-warning__svg");
+  applyIconOnlyNode(nodes.tabBrowserPreviewClose, "x", "tab-browser-preview__close-icon");
+  applyIconOnlyNode(nodes.tabBrowserPreviewPlus, "plus", "tab-browser-preview__plus-icon");
+  applyIconOnlyNode(nodes.uploadDropzoneIcon, "upload", "tab-upload-dropzone__svg");
 }
 
 function markChanged() {
@@ -1833,15 +2060,19 @@ function buildQuickEnvironment(title, prefixValue, sourceUrl = "") {
     badgeSize: 14,
     badgeOffset: 12,
     badgeOpacity: 1,
-    watermarkText: name,
-    watermarkEnabled: false,
+    watermarkText: badge,
+    watermarkEnabled: true,
     watermarkColor: color,
-    watermarkOpacity: 0.08,
+    watermarkOpacity: 0.06,
     watermarkAngle: -24,
     watermarkSize: 42,
     watermarkGap: 80,
-    titlePrefix: true,
-    markerMode: "badge",
+    tabDisplay: {
+      enabled: false,
+      favicon: { enabled: false, source: "preset", type: TAB_DISPLAY_CONFIG.DEFAULT_PRESET_TYPE, value: color },
+      title: { override: "" }
+    },
+    markerMode: "badge-watermark",
     rules: [{ type: "prefix", value: prefixValue }],
     accounts: []
   };
@@ -1881,7 +2112,10 @@ function renderColorSwatches(node, colors, value, onSelect) {
     button.classList.toggle("is-active", color.toLowerCase() === String(value || "").toLowerCase());
     button.style.setProperty("--swatch-color", color);
     button.title = color;
-    button.addEventListener("click", () => onSelect(color));
+    button.addEventListener("click", () => {
+      if (button.disabled) return;
+      onSelect(color);
+    });
     node.append(button);
   });
 }
@@ -1902,6 +2136,7 @@ function syncColorControls(environment = selectedEnvironment()) {
   renderColorSwatches(nodes.watermarkColorSwatches, ENVIRONMENT_COLOR_PRESETS, environment.watermarkColor, (color) => {
     updateSelectedEnvironment({ watermarkColor: color });
   });
+  syncMarkerControlStates();
 }
 
 function renderEnvironmentList() {
@@ -2107,6 +2342,7 @@ function renderEnvironmentList() {
         const name = document.createElement("div");
         name.className = "environment-item__name";
         const nameText = document.createElement("span");
+        nameText.className = "environment-item__name-text";
         nameText.textContent = environment.name || t("environmentFallback");
         name.append(nameText);
 
@@ -2120,7 +2356,10 @@ function renderEnvironmentList() {
         const badge = document.createElement("span");
         badge.className = "environment-item__badge";
         badge.textContent = markerLabel(environment);
-        name.append(badge);
+        const badgeSlot = document.createElement("span");
+        badgeSlot.className = "environment-item__badge-slot";
+        badgeSlot.append(badge);
+        name.append(badgeSlot);
 
         const meta = document.createElement("div");
         meta.className = "environment-item__meta";
@@ -2381,17 +2620,11 @@ function renderRows() {
   }
 }
 
-function previewStyleLabel(environment) {
-  if (environment.badgeStyle === "slanted") return t("badgeStyleSlanted");
-  if (environment.badgeStyle === "edge-glow") return t("badgeStyleEdgeGlow");
-  return t("badgeStylePill");
-}
-
 function renderPreviewWatermark(surface, label, environment) {
   const watermark = document.createElement("div");
   watermark.className = "marker-preview__watermark";
   watermark.style.setProperty("--preview-watermark-color", environment.watermarkColor || "#2563eb");
-  watermark.style.setProperty("--preview-watermark-opacity", String(environment.watermarkOpacity ?? 0.08));
+  watermark.style.setProperty("--preview-watermark-opacity", String(environment.watermarkOpacity ?? 0.06));
   watermark.style.setProperty("--preview-watermark-angle", `${environment.watermarkAngle ?? -24}deg`);
   watermark.style.setProperty("--preview-watermark-size", `${environment.watermarkSize ?? 42}px`);
   watermark.style.setProperty("--preview-watermark-gap", `${environment.watermarkGap ?? 80}px`);
@@ -2434,7 +2667,345 @@ function renderPreviewBadge(surface, label, environment) {
   surface.append(badge);
 }
 
-function buildPreviewCanvas(environment, label, previewType) {
+function tabDisplayPreviewTitle(environment) {
+  const tabDisplay = environment?.tabDisplay;
+  if (!tabDisplay?.enabled) return "Example Console";
+  const title = tabDisplayTitle(environment);
+  const source = String(title.override || "").trim() ? title.override : "Example Console";
+  return `${title.prefix || ""}${source}`;
+}
+
+function setFaviconBackground(node, href) {
+  if (!node) return;
+  node.style.backgroundImage = href ? `url(${JSON.stringify(href)})` : "";
+}
+
+function renderFaviconVisual(node, originalLabel, favicon, enabled) {
+  if (!node) return;
+  const custom = Boolean(enabled && favicon?.enabled && favicon?.value);
+  node.classList.toggle("is-original", !custom);
+  node.classList.toggle("is-custom", custom);
+  setFaviconBackground(node, custom ? EnvMateTabDisplayManager.iconHref(favicon) : "");
+  if (node === nodes.faviconButtonIcon && nodes.faviconButtonOriginal) {
+    nodes.faviconButtonOriginal.hidden = custom;
+    nodes.faviconButtonOriginal.textContent = originalLabel;
+  }
+}
+
+function renderBrowserFavicon(node, favicon, enabled) {
+  if (!node) return;
+  const custom = Boolean(enabled && favicon?.enabled && favicon?.value);
+  node.replaceChildren();
+  node.classList.toggle("is-original", !custom);
+  node.classList.toggle("is-custom", custom);
+  setFaviconBackground(node, custom ? EnvMateTabDisplayManager.iconHref(favicon) : "");
+  if (!custom) node.append(createLucideIcon("globe", "tab-browser-preview__favicon-icon"));
+}
+
+function renderTabDisplayPreview(environment = selectedEnvironment()) {
+  if (!nodes.tabDisplayPreview) return;
+  const enabled = environment?.tabDisplay?.enabled === true;
+  const favicon = tabDisplayFavicon(environment);
+  nodes.tabDisplayPreview.classList.toggle("is-disabled", !enabled);
+  if (nodes.tabBrowserPreview) nodes.tabBrowserPreview.classList.toggle("is-disabled", !enabled);
+  renderBrowserFavicon(nodes.tabBrowserPreviewFavicon, favicon, enabled);
+  if (nodes.tabBrowserPreviewContextIcon && !nodes.tabBrowserPreviewContextIcon.childNodes.length) {
+    renderBrowserFavicon(nodes.tabBrowserPreviewContextIcon, null, false);
+  }
+  if (nodes.tabBrowserPreviewTitle) {
+    nodes.tabBrowserPreviewTitle.textContent = environment ? tabDisplayPreviewTitle(environment) : "Example Console";
+  }
+}
+
+function renderTabDisplayEditor(environment = selectedEnvironment()) {
+  if (!nodes.faviconButton) return;
+  const enabled = environment?.tabDisplay?.enabled === true;
+  const favicon = tabDisplayFavicon(environment);
+  renderFaviconVisual(nodes.faviconButtonIcon, t("websiteFavicon"), favicon, enabled);
+  nodes.faviconButton.disabled = !enabled;
+  nodes.faviconButton.setAttribute("aria-disabled", String(!enabled));
+}
+
+function syncFaviconPopoverPanels(source, enabled) {
+  const activeSource = ["emoji", "preset", "upload"].includes(source) ? source : "emoji";
+  nodes.faviconTabs.forEach((tab) => {
+    const isActive = tab.dataset.faviconSource === activeSource;
+    tab.classList.toggle("is-active", isActive);
+    tab.setAttribute("aria-selected", String(isActive));
+    tab.tabIndex = isActive ? 0 : -1;
+  });
+  if (nodes.emojiControls) nodes.emojiControls.hidden = activeSource !== "emoji";
+  if (nodes.presetControls) nodes.presetControls.hidden = activeSource !== "preset";
+  if (nodes.uploadControls) nodes.uploadControls.hidden = activeSource !== "upload";
+  if (nodes.emojiCustom) nodes.emojiCustom.disabled = !enabled || activeSource !== "emoji";
+  if (nodes.presetType) nodes.presetType.disabled = !enabled || activeSource !== "preset";
+  if (nodes.presetColor) nodes.presetColor.disabled = !enabled || activeSource !== "preset";
+  if (nodes.presetColorText) nodes.presetColorText.disabled = !enabled || activeSource !== "preset";
+  if (nodes.faviconFile) nodes.faviconFile.disabled = !enabled || activeSource !== "upload";
+}
+
+function selectedPresetType() {
+  const value = nodes.presetType?.value;
+  return TAB_DISPLAY_CONFIG.isPresetType(value) ? value : TAB_DISPLAY_CONFIG.DEFAULT_PRESET_TYPE;
+}
+
+function setEmojiCustomError(visible) {
+  const hasError = Boolean(visible);
+  if (nodes.emojiCustomStatus) {
+    nodes.emojiCustomStatus.textContent = t(hasError ? "emojiCustomError" : "emojiCustomHint");
+    nodes.emojiCustomStatus.classList.toggle("is-error", hasError);
+  }
+  if (nodes.emojiCustom) nodes.emojiCustom.setAttribute("aria-invalid", String(hasError));
+}
+
+function uploadEnvironmentKey(environment) {
+  return String(environment?.id || "");
+}
+
+function setUploadTransientState(environment, state) {
+  const key = uploadEnvironmentKey(environment);
+  if (!key) return;
+  if (state) uploadTransientStates.set(key, state);
+  else uploadTransientStates.delete(key);
+}
+
+function renderUploadDropzone(environment = selectedEnvironment(), source = activeFaviconSource, enabled = environment?.tabDisplay?.enabled === true) {
+  if (!nodes.uploadDropzone) return;
+  const favicon = tabDisplayFavicon(environment);
+  const state = uploadTransientStates.get(uploadEnvironmentKey(environment));
+  const configured = favicon.enabled === true && favicon.source === "upload" && Boolean(favicon.value);
+  const processing = state?.kind === "processing";
+  const error = state?.kind === "error";
+  const success = configured && !processing && !error;
+  const interactive = Boolean(enabled && source === "upload");
+  const fileName = uploadFileNames.get(uploadEnvironmentKey(environment)) || "";
+
+  nodes.uploadDropzone.setAttribute("aria-disabled", String(!interactive));
+  nodes.uploadDropzone.setAttribute("aria-busy", String(processing));
+  nodes.uploadDropzone.tabIndex = interactive ? 0 : -1;
+  nodes.uploadDropzone.classList.toggle("is-error", error);
+  nodes.uploadDropzone.classList.toggle("is-processing", processing);
+  nodes.uploadDropzone.classList.toggle("is-success", success);
+
+  if (nodes.uploadDropzoneTitle) {
+    nodes.uploadDropzoneTitle.textContent = processing
+      ? t("uploadFaviconProcessing")
+      : success
+        ? (fileName || t("customFaviconReady"))
+        : t("uploadFaviconDropzone");
+  }
+  if (nodes.uploadDropzoneHint) {
+    nodes.uploadDropzoneHint.textContent = success
+      ? t("uploadFaviconConfigured")
+      : t("uploadFaviconDropzoneHint");
+  }
+  if (nodes.uploadStatus) {
+    nodes.uploadStatus.textContent = error ? String(state.message || t("invalidUploadedFavicon")) : "";
+    nodes.uploadStatus.hidden = !error;
+  }
+  if (nodes.uploadDropzoneReselect) {
+    nodes.uploadDropzoneReselect.textContent = t("uploadFaviconReselect");
+    nodes.uploadDropzoneReselect.hidden = !success;
+  }
+  if (nodes.uploadDropzoneIcon) nodes.uploadDropzoneIcon.hidden = success;
+  if (nodes.uploadDropzonePreview) nodes.uploadDropzonePreview.hidden = !success;
+  if (nodes.uploadDropzonePreviewImage) {
+    nodes.uploadDropzonePreviewImage.src = success ? String(favicon.value) : "";
+    // The adjacent file name and status text describe this preview; keep the
+    // decorative image out of the screen reader's announcement.
+    nodes.uploadDropzonePreviewImage.alt = "";
+  }
+}
+
+function clearUploadDropzoneDragState() {
+  uploadDragDepth = 0;
+  nodes.uploadDropzone?.classList.remove("is-dragover");
+}
+
+function uploadDropzoneIsInteractive() {
+  return Boolean(nodes.uploadDropzone && nodes.uploadDropzone.getAttribute("aria-disabled") !== "true");
+}
+
+async function processUploadedFavicon(file) {
+  const environment = selectedEnvironment();
+  if (!environment || environment.tabDisplay?.enabled !== true) return false;
+  setUploadTransientState(environment, { kind: "processing" });
+  renderUploadDropzone(environment, activeFaviconSource, true);
+  try {
+    const value = await normalizeUploadedFavicon(file);
+    if (selectedEnvironment() !== environment) {
+      setUploadTransientState(environment, null);
+      return false;
+    }
+    const fileName = String(file.name || "");
+    if (fileName) uploadFileNames.set(uploadEnvironmentKey(environment), fileName);
+    setUploadTransientState(environment, null);
+    activeFaviconSource = "upload";
+    updateTabDisplay(environment, { favicon: { enabled: true, source: "upload", type: "image/png", value } });
+    return true;
+  } catch (error) {
+    if (selectedEnvironment() !== environment) {
+      setUploadTransientState(environment, null);
+      return false;
+    }
+    setUploadTransientState(environment, { kind: "error", message: error.message || t("invalidUploadedFavicon") });
+    renderUploadDropzone(environment, activeFaviconSource, true);
+    setStatus(error.message || t("invalidUploadedFavicon"), true);
+    return false;
+  }
+}
+
+async function handleUploadFileSelection(files) {
+  const selection = TAB_DISPLAY_CONFIG.selectSingleUploadFile(files);
+  if (!selection.file) {
+    if (selection.reason === "multiple") {
+      const environment = selectedEnvironment();
+      setUploadTransientState(environment, { kind: "error", message: t("uploadFaviconDropMultiple") });
+      renderUploadDropzone(environment, activeFaviconSource, environment?.tabDisplay?.enabled === true);
+      setStatus(t("uploadFaviconDropMultiple"), true);
+    }
+    return false;
+  }
+  return processUploadedFavicon(selection.file);
+}
+
+function setFaviconPopoverOpen(open, restoreFocus = true) {
+  if (!nodes.faviconPopover || !nodes.faviconButton) return;
+  const nextOpen = Boolean(open) && !nodes.faviconButton.disabled;
+  faviconPopoverOpen = nextOpen;
+  nodes.faviconPopover.hidden = !nextOpen;
+  nodes.faviconButton.setAttribute("aria-expanded", String(nextOpen));
+  if (nextOpen) {
+    const favicon = tabDisplayFavicon(selectedEnvironment());
+    activeFaviconSource = TAB_DISPLAY_CONFIG.preferredFaviconSource(favicon);
+    syncTabDisplayControls(selectedEnvironment());
+  } else if (restoreFocus) {
+    nodes.faviconButton.focus();
+    syncTabDisplayControls(selectedEnvironment());
+  }
+}
+
+function renderEmojiPicker(environment) {
+  if (!nodes.emojiPicker) return;
+  const favicon = tabDisplayFavicon(environment);
+  const current = favicon.source === "emoji" ? favicon.value : "";
+  nodes.emojiPicker.innerHTML = "";
+  TAB_EMOJI_OPTIONS.forEach(([emoji, keywords]) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "emoji-picker__item";
+    button.textContent = emoji;
+    button.title = keywords;
+    button.disabled = environment?.tabDisplay?.enabled !== true || activeFaviconSource !== "emoji";
+    button.classList.toggle("is-active", current === emoji);
+    button.setAttribute("role", "option");
+    button.setAttribute("aria-selected", String(current === emoji));
+    button.addEventListener("click", () => {
+      const selected = selectedEnvironment();
+      if (!selected) return;
+      selected.tabDisplay.favicon = { enabled: true, source: "emoji", type: "native", value: emoji };
+      activeFaviconSource = "emoji";
+      syncTabDisplayControls(selected);
+      markChanged();
+    });
+    nodes.emojiPicker.append(button);
+  });
+}
+
+function applyCustomEmoji(value) {
+  const selected = selectedEnvironment();
+  if (!selected || selected.tabDisplay?.enabled !== true) return;
+  const candidate = String(value ?? "").trim();
+  if (!candidate) {
+    setEmojiCustomError(false);
+    return;
+  }
+  if (!TAB_DISPLAY_CONFIG.isSingleEmoji(candidate)) {
+    setEmojiCustomError(true);
+    return;
+  }
+  setEmojiCustomError(false);
+  selected.tabDisplay.favicon = { enabled: true, source: "emoji", type: "native", value: candidate };
+  activeFaviconSource = "emoji";
+  syncTabDisplayControls(selected);
+  markChanged();
+}
+
+function syncTabDisplayControls(environment = selectedEnvironment()) {
+  if (!environment || !environment.tabDisplay) return;
+  const tabDisplay = environment.tabDisplay;
+  const favicon = tabDisplayFavicon(environment);
+  const configuredSource = ["emoji", "preset", "upload"].includes(favicon.source) ? favicon.source : "preset";
+  if (!faviconPopoverOpen) activeFaviconSource = configuredSource;
+  const source = faviconPopoverOpen ? activeFaviconSource : configuredSource;
+  const sourceFavicon = favicon.source === source ? favicon : {
+    enabled: false,
+    source,
+    type: source === "preset" ? TAB_DISPLAY_CONFIG.DEFAULT_PRESET_TYPE : source === "upload" ? "image/png" : "native",
+    value: source === "preset" ? TAB_DISPLAY_CONFIG.DEFAULT_COLOR : ""
+  };
+  const enabled = tabDisplay.enabled === true;
+
+  if (nodes.tabDisplayEnabled) nodes.tabDisplayEnabled.checked = enabled;
+  if (nodes.titlePrefix) {
+    nodes.titlePrefix.value = String(tabDisplayTitle(environment).prefix ?? "");
+    nodes.titlePrefix.disabled = !enabled;
+  }
+  if (nodes.titleOverride) {
+    nodes.titleOverride.value = String(tabDisplayTitle(environment).override ?? "");
+    nodes.titleOverride.disabled = !enabled;
+  }
+  if (nodes.titleWarning) {
+    const hasOverride = Boolean(String(tabDisplayTitle(environment).override || "").trim());
+    nodes.titleWarning.hidden = !enabled || !hasOverride;
+    nodes.titleWarning.disabled = !enabled || !hasOverride;
+  }
+  if (nodes.emojiCustom) {
+    nodes.emojiCustom.value = favicon.source === "emoji" ? String(favicon.value || "") : "";
+    setEmojiCustomError(false);
+  }
+  if (nodes.presetType) {
+    nodes.presetType.value = sourceFavicon.type || TAB_DISPLAY_CONFIG.DEFAULT_PRESET_TYPE;
+  }
+  if (nodes.presetColor) {
+    nodes.presetColor.value = TAB_DISPLAY_CONFIG.normalizeColor(sourceFavicon.value);
+  }
+  if (nodes.presetColorText) {
+    nodes.presetColorText.value = TAB_DISPLAY_CONFIG.normalizeColor(sourceFavicon.value);
+  }
+  if (nodes.presetColorSwatches) {
+    renderColorSwatches(nodes.presetColorSwatches, TAB_FAVICON_COLOR_PRESETS, sourceFavicon.value, (color) => {
+      const selected = selectedEnvironment();
+      if (!selected) return;
+      selected.tabDisplay.favicon = { ...tabDisplayFavicon(selected), enabled: true, source: "preset", type: selectedPresetType(), value: color };
+      activeFaviconSource = "preset";
+      syncTabDisplayControls(selected);
+      markChanged();
+    });
+  }
+  if (nodes.faviconReset) nodes.faviconReset.disabled = !enabled;
+  syncFaviconPopoverPanels(source, enabled);
+  renderUploadDropzone(environment, source, enabled);
+  renderTabDisplayEditor(environment);
+  renderTabDisplayPreview(environment);
+  renderEmojiPicker(environment);
+}
+
+function updateTabDisplay(environment, patch = {}) {
+  if (!environment) return;
+  const currentTitle = tabDisplayTitle(environment);
+  const nextTitle = { ...currentTitle, ...(patch.title || {}) };
+  environment.tabDisplay = {
+    ...environment.tabDisplay,
+    ...patch,
+    title: nextTitle,
+    favicon: { ...tabDisplayFavicon(environment), ...(patch.favicon || {}) }
+  };
+  syncTabDisplayControls(environment);
+  markChanged();
+}
+
+function buildPreviewCanvas() {
   const canvas = document.createElement("div");
   canvas.className = "marker-preview__canvas";
 
@@ -2442,22 +3013,8 @@ function buildPreviewCanvas(environment, label, previewType) {
   chromeBar.className = "marker-preview__chrome";
   chromeBar.innerHTML = '<span></span><span></span><span></span>';
 
-  const header = document.createElement("div");
-  header.className = "marker-preview__header";
-  const title = document.createElement("div");
-  title.className = "marker-preview__title";
-  title.textContent = environment.titlePrefix ? `[${label}] Example Console` : "Example Console";
-  const meta = document.createElement("div");
-  meta.className = "marker-preview__meta";
-  if (previewType === "badge") {
-    meta.textContent = environment.badgeEnabled !== false ? t("badgeConfig") : "";
-  } else if (previewType === "watermark") {
-    meta.textContent = environment.watermarkEnabled === true ? t("watermarkConfig") : "";
-  } else {
-    meta.textContent = "";
-  }
-  header.append(title, meta);
-
+  const viewport = document.createElement("div");
+  viewport.className = "marker-preview__viewport";
   const body = document.createElement("div");
   body.className = "marker-preview__body";
   body.innerHTML = `
@@ -2470,8 +3027,9 @@ function buildPreviewCanvas(environment, label, previewType) {
     </div>
   `;
 
-  canvas.append(chromeBar, header, body);
-  return canvas;
+  viewport.append(body);
+  canvas.append(chromeBar, viewport);
+  return { canvas, viewport };
 }
 
 function renderMarkerPreviews() {
@@ -2483,22 +3041,26 @@ function renderMarkerPreviews() {
 
   const label = markerLabel(environment);
   const watermarkText = watermarkLabel(environment);
-  const badgeCanvas = buildPreviewCanvas(environment, label, "badge");
+  const badgePreview = buildPreviewCanvas();
   if (environment.badgeEnabled !== false) {
-    renderPreviewBadge(badgeCanvas, label, environment);
+    renderPreviewBadge(badgePreview.viewport, label, environment);
   }
-  nodes.badgePreviewSurface.append(badgeCanvas);
+  nodes.badgePreviewSurface.append(badgePreview.canvas);
 
-  const watermarkCanvas = buildPreviewCanvas(environment, label, "watermark");
+  const watermarkPreview = buildPreviewCanvas();
+  watermarkPreview.canvas.classList.add("marker-preview__canvas--watermark");
   if (environment.watermarkEnabled === true) {
-    renderPreviewWatermark(watermarkCanvas, watermarkText, environment);
+    renderPreviewWatermark(watermarkPreview.viewport, watermarkText, environment);
   }
-  nodes.watermarkPreviewSurface.append(watermarkCanvas);
+  nodes.watermarkPreviewSurface.append(watermarkPreview.canvas);
+  renderTabDisplayPreview(environment);
 }
 
 function renderForm() {
+  prefixFocusToken += 1;
   const environment = selectedEnvironment();
   const hasEnvironment = Boolean(environment);
+  if (faviconPopoverOpen) setFaviconPopoverOpen(false, false);
   nodes.form.hidden = !hasEnvironment;
   if (nodes.toolbox) {
     nodes.toolbox.hidden = !hasEnvironment;
@@ -2507,6 +3069,7 @@ function renderForm() {
   nodes.addRule.disabled = !hasEnvironment;
   nodes.addAccount.disabled = !hasEnvironment;
   nodes.enabled.disabled = !hasEnvironment;
+  nodes.tabDisplayEnabled.disabled = !hasEnvironment;
   nodes.save.disabled = !hasEnvironment;
   nodes.sectionNavButtons.forEach((button) => {
     button.disabled = !hasEnvironment;
@@ -2524,10 +3087,9 @@ function renderForm() {
   nodes.badgeEnabled.checked = environment.badgeEnabled !== false;
   nodes.watermarkEnabled.checked = environment.watermarkEnabled === true;
   nodes.watermarkText.value = watermarkLabel(environment);
-  syncColorControls(environment);
   nodes.enabled.checked = environment.enabled !== false;
   syncEnabledLabel();
-  nodes.titlePrefix.checked = environment.titlePrefix;
+  syncTabDisplayControls(environment);
   syncBadgeStyleOptions(environment.badgeStyle);
   nodes.badgePosition.value = environment.badgePosition;
   nodes.badgeScale.value = environment.badgeScale;
@@ -2537,6 +3099,7 @@ function renderForm() {
   nodes.watermarkAngle.value = environment.watermarkAngle;
   nodes.watermarkSize.value = environment.watermarkSize;
   nodes.watermarkGap.value = environment.watermarkGap;
+  syncColorControls(environment);
   renderRows();
   renderMarkerPreviews();
   isRendering = false;
@@ -2565,6 +3128,7 @@ function updateSelectedEnvironment(patch) {
   if ("badgeColor" in patch || "badgeTextColor" in patch || "watermarkColor" in patch) {
     syncColorControls(environment);
   }
+  if ("tabDisplay" in patch) syncTabDisplayControls(environment);
   renderMarkerPreviews();
   markChanged();
 }
@@ -2652,14 +3216,18 @@ function addEnvironment(groupId = selectedGroupId || DEFAULT_GROUP_ID) {
     badgeOffset: 12,
     badgeOpacity: 1,
     watermarkText: name,
-    watermarkEnabled: false,
+    watermarkEnabled: true,
     watermarkColor: color,
-    watermarkOpacity: 0.08,
+    watermarkOpacity: 0.06,
     watermarkAngle: -24,
     watermarkSize: 42,
     watermarkGap: 80,
-    titlePrefix: true,
-    markerMode: "badge",
+    tabDisplay: {
+      enabled: false,
+      favicon: { enabled: false, source: "preset", type: TAB_DISPLAY_CONFIG.DEFAULT_PRESET_TYPE, value: color },
+      title: { override: "" }
+    },
+    markerMode: "badge-watermark",
     rules: [{ type: "wildcard", value: "https://example.com/*" }],
     accounts: []
   };
@@ -2747,6 +3315,8 @@ function exportSettings() {
 function applySettings(nextSettings, message) {
   clearBasicValidationError();
   clearAccountsValidationError();
+  uploadFileNames.clear();
+  uploadTransientStates.clear();
   settings = normalizeSettings(nextSettings);
   hasUnsavedChanges = message === t("importedSaveToApply") || message === t("sampleLoadedSaveToApply");
   if (!hasUnsavedChanges) {
@@ -2810,7 +3380,10 @@ bindNodeEvent(nodes.homepageUrl, "input", () => {
   updateSelectedEnvironment({ homepageUrl: normalizeHomepageUrl(nodes.homepageUrl.value) });
 });
 bindNodeEvent(nodes.badge, "input", () => updateSelectedEnvironment({ badge: nodes.badge.value }));
-bindNodeEvent(nodes.badgeEnabled, "change", () => updateSelectedEnvironment({ badgeEnabled: nodes.badgeEnabled.checked }));
+bindNodeEvent(nodes.badgeEnabled, "change", () => {
+  updateSelectedEnvironment({ badgeEnabled: nodes.badgeEnabled.checked });
+  syncMarkerControlStates();
+});
 bindNodeEvent(nodes.watermarkText, "input", () => updateSelectedEnvironment({ watermarkText: nodes.watermarkText.value }));
 bindNodeEvent(nodes.badgeColor, "input", () => {
   updateSelectedEnvironment({ badgeColor: nodes.badgeColor.value });
@@ -2821,12 +3394,115 @@ bindNodeEvent(nodes.badgeTextColor, "input", () => {
 bindNodeEvent(nodes.watermarkColor, "input", () => {
   updateSelectedEnvironment({ watermarkColor: nodes.watermarkColor.value });
 });
-bindNodeEvent(nodes.watermarkEnabled, "change", () => updateSelectedEnvironment({ watermarkEnabled: nodes.watermarkEnabled.checked }));
+bindNodeEvent(nodes.watermarkEnabled, "change", () => {
+  updateSelectedEnvironment({ watermarkEnabled: nodes.watermarkEnabled.checked });
+  syncMarkerControlStates();
+});
 bindNodeEvent(nodes.enabled, "change", async () => {
   syncEnabledLabel();
   await setSelectedEnvironmentEnabled(nodes.enabled.checked);
 });
-bindNodeEvent(nodes.titlePrefix, "change", () => updateSelectedEnvironment({ titlePrefix: nodes.titlePrefix.checked }));
+bindNodeEvent(nodes.tabDisplayEnabled, "change", () => {
+  const enabled = nodes.tabDisplayEnabled.checked;
+  updateTabDisplay(selectedEnvironment(), { enabled });
+  if (!enabled && faviconPopoverOpen) setFaviconPopoverOpen(false, false);
+});
+bindNodeEvent(nodes.faviconButton, "click", () => setFaviconPopoverOpen(!faviconPopoverOpen));
+bindNodeEvent(nodes.faviconPopoverClose, "click", () => setFaviconPopoverOpen(false));
+nodes.faviconTabs.forEach((tab) => {
+  bindNodeEvent(tab, "click", () => {
+    const source = tab.dataset.faviconSource;
+    if (!["emoji", "preset", "upload"].includes(source)) return;
+    activeFaviconSource = source;
+    syncTabDisplayControls(selectedEnvironment());
+  });
+});
+bindNodeEvent(nodes.titlePrefix, "focus", () => {
+  const focusToken = ++prefixFocusToken;
+  const environment = selectedEnvironment();
+  if (!environment || !environment.tabDisplay?.title) return;
+  const title = environment.tabDisplay.title;
+  if (!TAB_DISPLAY_CONFIG.initializePrefix(title, "[]")) return;
+  nodes.titlePrefix.value = title.prefix;
+  TAB_DISPLAY_CONFIG.schedulePrefixCaret(
+    nodes.titlePrefix,
+    title.prefix,
+    () => focusToken === prefixFocusToken && selectedEnvironment() === environment
+  );
+  markChanged();
+  renderTabDisplayPreview(environment);
+});
+bindNodeEvent(nodes.titlePrefix, "input", () => {
+  prefixFocusToken += 1;
+  const environment = selectedEnvironment();
+  if (!environment) return;
+  updateTabDisplay(environment, { title: { prefix: nodes.titlePrefix.value } });
+});
+bindNodeEvent(nodes.titleOverride, "input", () => {
+  const environment = selectedEnvironment();
+  if (!environment) return;
+  updateTabDisplay(environment, { title: { override: nodes.titleOverride.value } });
+});
+bindNodeEvent(nodes.emojiCustom, "input", () => applyCustomEmoji(nodes.emojiCustom.value));
+bindNodeEvent(nodes.presetType, "change", () => {
+  const environment = selectedEnvironment();
+  const current = tabDisplayFavicon(environment);
+  const value = current.source === "preset"
+    ? TAB_DISPLAY_CONFIG.normalizeColor(current.value)
+    : TAB_DISPLAY_CONFIG.DEFAULT_COLOR;
+  updateTabDisplay(environment, {
+    favicon: { enabled: true, source: "preset", type: selectedPresetType(), value }
+  });
+});
+bindNodeEvent(nodes.presetColor, "input", () => {
+  const color = TAB_DISPLAY_CONFIG.normalizeColor(nodes.presetColor.value);
+  updateTabDisplay(selectedEnvironment(), { favicon: { enabled: true, source: "preset", type: selectedPresetType(), value: color } });
+});
+bindNodeEvent(nodes.presetColorText, "input", () => {
+  const value = String(nodes.presetColorText.value || "").trim();
+  if (!/^#[0-9a-f]{6}$/i.test(value)) return;
+  updateTabDisplay(selectedEnvironment(), { favicon: { enabled: true, source: "preset", type: selectedPresetType(), value } });
+});
+bindNodeEvent(nodes.faviconReset, "click", () => {
+  updateTabDisplay(selectedEnvironment(), { favicon: { enabled: false } });
+  setFaviconPopoverOpen(false);
+});
+bindNodeEvent(nodes.uploadDropzone, "click", () => {
+  if (!uploadDropzoneIsInteractive()) return;
+  nodes.faviconFile?.click();
+});
+bindNodeEvent(nodes.uploadDropzone, "keydown", (event) => {
+  if (!uploadDropzoneIsInteractive() || !["Enter", " ", "Spacebar"].includes(event.key)) return;
+  event.preventDefault();
+  nodes.faviconFile?.click();
+});
+bindNodeEvent(nodes.uploadDropzone, "dragenter", (event) => {
+  event.preventDefault();
+  if (!uploadDropzoneIsInteractive()) return;
+  uploadDragDepth += 1;
+  nodes.uploadDropzone.classList.add("is-dragover");
+});
+bindNodeEvent(nodes.uploadDropzone, "dragover", (event) => {
+  event.preventDefault();
+  if (!uploadDropzoneIsInteractive()) return;
+  if (event.dataTransfer) event.dataTransfer.dropEffect = "copy";
+  nodes.uploadDropzone.classList.add("is-dragover");
+});
+bindNodeEvent(nodes.uploadDropzone, "dragleave", (event) => {
+  event.preventDefault();
+  if (event.relatedTarget && nodes.uploadDropzone?.contains(event.relatedTarget)) return;
+  clearUploadDropzoneDragState();
+});
+bindNodeEvent(nodes.uploadDropzone, "drop", async (event) => {
+  event.preventDefault();
+  clearUploadDropzoneDragState();
+  if (!uploadDropzoneIsInteractive()) return;
+  await handleUploadFileSelection(event.dataTransfer?.files);
+});
+bindNodeEvent(nodes.faviconFile, "change", async () => {
+  await handleUploadFileSelection(nodes.faviconFile.files);
+  nodes.faviconFile.value = "";
+});
 
 bindNodeEvent(nodes.badgePosition, "change", () => {
   updateSelectedEnvironment({ badgePosition: nodes.badgePosition.value });
@@ -2835,8 +3511,8 @@ bindNodeEvent(nodes.badgePosition, "change", () => {
 nodes.badgeStyleOptions.forEach((option) => {
   bindNodeEvent(option, "change", () => {
     const nextStyle = selectedBadgeStyle();
-    nodes.badgePosition.disabled = nextStyle === "edge-glow";
     updateSelectedEnvironment({ badgeStyle: nextStyle });
+    syncMarkerControlStates();
   });
 });
 
@@ -2880,6 +3556,17 @@ nodes.sectionNavButtons.forEach((button) => {
   });
 });
 
+bindNodeEvent(nodes.form, "focusin", (event) => {
+  const section = event.target?.closest?.(".form-section");
+  if (!section?.id || !nodes.form.contains(section)) return;
+  if (!nodes.sectionNavButtons.some((button) => button.dataset.scrollTarget === section.id)) return;
+  if (section.id === activeSectionId) return;
+  clearScrollSettleTimer();
+  scrollTargetLockId = "";
+  activeSectionId = section.id;
+  syncRailNav();
+});
+
 window.addEventListener(
   "scroll",
   () => {
@@ -2897,8 +3584,18 @@ window.addEventListener(
 );
 
 window.addEventListener("resize", positionToolbox, { passive: true });
+document.addEventListener("click", (event) => {
+  if (!faviconPopoverOpen || !nodes.faviconPopover || !nodes.faviconButton) return;
+  if (nodes.faviconPopover.contains(event.target) || nodes.faviconButton.contains(event.target)) return;
+  setFaviconPopoverOpen(false);
+});
 window.addEventListener("keydown", (event) => {
   if (event.key !== "Escape") return;
+  if (faviconPopoverOpen) {
+    event.preventDefault();
+    setFaviconPopoverOpen(false);
+    return;
+  }
   if (activeModalName === "export") closeExportModal();
   if (activeModalName === "import") closeImportModal();
   if (activeModalName === "about") closeAboutModal();
@@ -3006,6 +3703,8 @@ bindNodeEvent(nodes.modalBackdrop, "click", () => {
 });
 
 bindNodeEvent(nodes.loadSample, "click", async () => {
+  uploadFileNames.clear();
+  uploadTransientStates.clear();
   const sampleGroup = applyLocalizedSampleGroup();
   await chrome.storage.local.set({ [STORAGE_KEY]: settings });
   savedSettingsSnapshot = clone(settings);

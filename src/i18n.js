@@ -85,6 +85,10 @@
       node.placeholder = t(node.dataset.i18nPlaceholder);
     });
 
+    root.querySelectorAll("[data-i18n-aria-label]").forEach((node) => {
+      node.setAttribute("aria-label", t(node.dataset.i18nAriaLabel));
+    });
+
     if (document.title) {
       const titleKey = document.documentElement.dataset.i18nTitle;
       if (titleKey) document.title = t(titleKey);
