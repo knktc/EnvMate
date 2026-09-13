@@ -24,11 +24,15 @@ const DEFAULT_SETTINGS = {
       watermarkText: "Local Dev",
       watermarkEnabled: false,
       watermarkColor: "#2563eb",
-      watermarkOpacity: 0.08,
+      watermarkOpacity: 0.06,
       watermarkAngle: -24,
       watermarkSize: 42,
       watermarkGap: 80,
-      titlePrefix: true,
+      tabDisplay: {
+        enabled: true,
+        favicon: { enabled: false, source: "preset", type: "solid-rounded-square", value: "#2563eb" },
+        title: { prefix: "[LOCAL] ", override: "" }
+      },
       markerMode: "badge",
       rules: [{ type: "wildcard", value: "http://localhost:*/*" }],
       accounts: [
@@ -61,11 +65,15 @@ const DEFAULT_SETTINGS = {
       watermarkText: "Test Environment",
       watermarkEnabled: true,
       watermarkColor: "#059669",
-      watermarkOpacity: 0.08,
+      watermarkOpacity: 0.06,
       watermarkAngle: -24,
       watermarkSize: 42,
       watermarkGap: 80,
-      titlePrefix: true,
+      tabDisplay: {
+        enabled: true,
+        favicon: { enabled: false, source: "preset", type: "solid-rounded-square", value: "#059669" },
+        title: { prefix: "[TEST] ", override: "" }
+      },
       markerMode: "badge-watermark",
       rules: [{ type: "wildcard", value: "https://test.example.com/*" }],
       accounts: []

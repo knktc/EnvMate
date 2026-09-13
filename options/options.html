@@ -82,6 +82,112 @@
               <div id="rules-list" class="stack-list"></div>
               </section>
 
+              <section id="section-tab-display" class="form-section">
+              <div class="section-title section-title--with-toggle">
+                <div>
+                  <h2 data-i18n="tabDisplay">Tab Management</h2>
+                  <p class="section-title__hint" data-i18n="tabDisplayHint">Customize the title and favicon shown in the browser tab.</p>
+                </div>
+                <label class="toggle-control section-title__toggle">
+                  <input id="env-tab-display-enabled" type="checkbox" />
+                  <span class="toggle-control__switch" aria-hidden="true"></span>
+                  <span data-i18n="tabDisplayEnabled">Enable tab management</span>
+                </label>
+              </div>
+              <div class="tab-display-editor">
+                <button id="tab-favicon-button" class="tab-favicon-button" type="button" aria-haspopup="dialog" aria-expanded="false" aria-controls="tab-favicon-popover" data-i18n-title="faviconButtonTitle" title="Choose a favicon">
+                  <span id="tab-favicon-button-icon" class="tab-favicon-button__icon" aria-hidden="true"></span>
+                  <span id="tab-favicon-button-original" class="tab-favicon-button__original" data-i18n="websiteFavicon">Original</span>
+                </button>
+
+                <label class="tab-display-input tab-display-input--prefix">
+                  <span id="tab-prefix-label" class="sr-only" data-i18n="titlePrefix">Title prefix</span>
+                  <input id="env-title-prefix" type="text" data-i18n-placeholder="titlePrefixPlaceholder" data-i18n-title="titlePrefixHint" aria-labelledby="tab-prefix-label" />
+                </label>
+
+                <label class="tab-display-input tab-display-input--title">
+                  <span id="tab-title-label" class="sr-only" data-i18n="customTitle">Custom page title</span>
+                  <span class="tab-display-title-input">
+                    <input id="env-title-override" type="text" data-i18n-placeholder="customTitlePlaceholder" aria-labelledby="tab-title-label" />
+                    <button id="tab-title-warning" class="tab-title-warning" type="button" hidden aria-label="Title update warning" data-i18n-aria-label="titleWarningLabel"><span id="tab-title-warning-icon" class="tab-title-warning__icon" aria-hidden="true"></span><span class="tab-title-warning__tooltip" role="tooltip" data-i18n="titleFlashWarning">Some websites update the title while loading or navigating, so the tab text may briefly flicker.</span></button>
+                  </span>
+                </label>
+
+                <div id="tab-favicon-popover" class="tab-favicon-popover" role="dialog" aria-labelledby="tab-favicon-popover-title" hidden>
+                  <div class="tab-favicon-popover__head">
+                    <strong id="tab-favicon-popover-title" data-i18n="faviconPopoverTitle">Choose favicon</strong>
+                    <button id="tab-favicon-popover-close" class="group-icon-button" type="button" data-i18n-title="close" data-i18n-aria-label="close" title="Close" aria-label="Close">×</button>
+                  </div>
+                  <div class="tab-favicon-tabs" role="tablist" data-i18n-aria-label="faviconPopoverTitle" aria-label="Choose favicon">
+                    <button id="tab-favicon-tab-emoji" class="tab-favicon-tab is-active" type="button" role="tab" aria-selected="true" aria-controls="tab-emoji-controls" data-favicon-source="emoji" data-i18n="faviconTabEmoji">Emoji</button>
+                    <button id="tab-favicon-tab-preset" class="tab-favicon-tab" type="button" role="tab" aria-selected="false" aria-controls="tab-preset-controls" data-favicon-source="preset" data-i18n="faviconTabPreset">Preset</button>
+                    <button id="tab-favicon-tab-upload" class="tab-favicon-tab" type="button" role="tab" aria-selected="false" aria-controls="tab-upload-controls" data-favicon-source="upload" data-i18n="faviconTabUpload">Upload</button>
+                  </div>
+
+                  <div id="tab-emoji-controls" class="tab-display-control-panel" role="tabpanel" aria-labelledby="tab-favicon-tab-emoji">
+                    <label class="field">
+                      <span data-i18n="emojiCustomLabel">Custom emoji</span>
+                      <input id="tab-emoji-custom" type="text" inputmode="text" data-i18n-placeholder="emojiCustomPlaceholder" aria-describedby="tab-emoji-custom-status" />
+                      <span id="tab-emoji-custom-status" class="emoji-custom-hint" data-i18n="emojiCustomHint" aria-live="polite">Or choose an Emoji</span>
+                    </label>
+                    <div id="tab-emoji-picker" class="emoji-picker" role="listbox" data-i18n-aria-label="faviconTabEmoji" aria-label="Emoji"></div>
+                  </div>
+                  <div id="tab-preset-controls" class="tab-display-control-panel" role="tabpanel" aria-labelledby="tab-favicon-tab-preset" hidden>
+                    <label class="field">
+                      <span data-i18n="presetShape">Shape</span>
+                      <select id="tab-preset-type">
+                        <option value="solid-rounded-square" data-i18n="presetSolidRoundedSquare">Square</option>
+                        <option value="solid-circle" data-i18n="presetSolidCircle">Circle</option>
+                      </select>
+                    </label>
+                    <label class="field color-field">
+                      <span data-i18n="presetColor">Color</span>
+                      <div class="color-field__body tab-display-color-body">
+                        <div id="tab-preset-color-swatches" class="color-swatches"></div>
+                        <input id="tab-preset-color" type="color" />
+                        <input id="tab-preset-color-text" class="color-text-input" type="text" inputmode="text" maxlength="7" />
+                      </div>
+                    </label>
+                  </div>
+                  <div id="tab-upload-controls" class="tab-display-control-panel" role="tabpanel" aria-labelledby="tab-favicon-tab-upload" hidden>
+                    <div id="tab-upload-dropzone" class="tab-upload-dropzone" role="button" tabindex="0" aria-disabled="true" aria-describedby="tab-upload-dropzone-hint tab-upload-status" data-i18n-aria-label="uploadFaviconDropzone" aria-label="Drag an image here, or choose a file">
+                      <span id="tab-upload-dropzone-icon" class="tab-upload-dropzone__icon" aria-hidden="true"></span>
+                      <span id="tab-upload-preview" class="tab-upload-dropzone__preview" hidden aria-hidden="true"><img id="tab-upload-preview-image" alt="" /></span>
+                      <span class="tab-upload-dropzone__copy">
+                        <strong id="tab-upload-dropzone-title" data-i18n="uploadFaviconDropzone">Drag an image here, or choose a file</strong>
+                        <span id="tab-upload-dropzone-hint" class="tab-upload-dropzone__hint" data-i18n="uploadFaviconDropzoneHint">PNG, JPEG, or WebP · max 2 MB</span>
+                        <span id="tab-upload-status" class="tab-upload-dropzone__status" role="status" aria-live="polite" hidden></span>
+                        <span id="tab-upload-reselect" class="tab-upload-dropzone__reselect" data-i18n="uploadFaviconReselect" hidden>Choose another</span>
+                      </span>
+                    </div>
+                    <input id="tab-favicon-file" type="file" accept="image/png,image/jpeg,image/webp" hidden />
+                  </div>
+                  <button id="tab-favicon-reset" class="small-button tab-favicon-reset" type="button" data-i18n="restoreWebsiteFavicon">Restore website icon</button>
+                </div>
+              </div>
+              <div id="tab-display-preview" class="marker-preview">
+                <div class="marker-preview__head">
+                  <span data-i18n="tabDisplayPreview">Tab Preview</span>
+                </div>
+                <div id="tab-display-preview-surface" class="marker-preview__surface tab-display-preview__surface">
+                  <div id="tab-browser-preview" class="tab-browser-preview">
+                    <div class="tab-browser-preview__strip">
+                      <div class="tab-browser-preview__context-tab" aria-hidden="true">
+                        <span id="tab-browser-preview-context-icon" class="tab-browser-preview__favicon"></span>
+                        <span class="tab-browser-preview__context-title">Documentation</span>
+                      </div>
+                      <div id="tab-browser-preview-active-tab" class="tab-browser-preview__active-tab">
+                        <span id="tab-browser-preview-favicon" class="tab-browser-preview__favicon" aria-hidden="true"></span>
+                        <span id="tab-browser-preview-title" class="tab-browser-preview__title"></span>
+                        <span id="tab-browser-preview-close" class="tab-browser-preview__control" aria-hidden="true"></span>
+                      </div>
+                      <span id="tab-browser-preview-plus" class="tab-browser-preview__control tab-browser-preview__plus" aria-hidden="true"></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              </section>
+
               <section id="section-badge" class="form-section">
               <div class="section-title section-title--with-toggle">
                 <div>
@@ -94,14 +200,10 @@
                   <span data-i18n="badgeEnabled">Enable badge</span>
                 </label>
               </div>
-              <div class="badge-layout">
+              <div id="badge-layout" class="badge-layout">
                 <div class="badge-card badge-card--content">
                   <div class="badge-card__head">
                     <h3 data-i18n="badgeContent">Content</h3>
-                    <label class="check-field check-field--inline">
-                      <input id="env-title-prefix" type="checkbox" />
-                      <span data-i18n="titlePrefix">Prefix page title with badge</span>
-                    </label>
                   </div>
                   <div class="badge-content-grid">
                     <label class="field badge-text-field">
@@ -208,7 +310,7 @@
                   <span data-i18n="watermarkEnabled">Enable watermark</span>
                 </label>
               </div>
-              <div class="watermark-layout">
+              <div id="watermark-layout" class="watermark-layout">
                 <div class="badge-card">
                   <div class="badge-card__head">
                     <h3 data-i18n="watermarkContent">Content & Color</h3>
@@ -278,6 +380,7 @@
                 <div class="workspace-toolbox__nav">
                   <button type="button" class="workspace-toolbox__nav-button" data-scroll-target="section-basic" data-i18n="basic">Basic</button>
                   <button type="button" class="workspace-toolbox__nav-button" data-scroll-target="section-rules" data-i18n="urlRules">URL Rules</button>
+                  <button type="button" class="workspace-toolbox__nav-button" data-scroll-target="section-tab-display" data-i18n="tabDisplay">Tab Management</button>
                   <button type="button" class="workspace-toolbox__nav-button" data-scroll-target="section-badge" data-i18n="badgeConfig">Badge Config</button>
                   <button type="button" class="workspace-toolbox__nav-button" data-scroll-target="section-watermark" data-i18n="watermarkConfig">Watermark Config</button>
                   <button type="button" class="workspace-toolbox__nav-button" data-scroll-target="section-accounts" data-i18n="testAccounts">Test Accounts</button>
@@ -486,6 +589,8 @@
     </main>
 
     <script src="../src/i18n.js"></script>
+    <script src="../src/tab-display-config.js"></script>
+    <script src="../src/tab-display-manager.js"></script>
     <script src="options.js"></script>
   </body>
 </html>

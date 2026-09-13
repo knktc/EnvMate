@@ -24,11 +24,15 @@
       "watermarkText": "Production Sample",
       "watermarkEnabled": true,
       "watermarkColor": "#dc2626",
-      "watermarkOpacity": 0.08,
+      "watermarkOpacity": 0.06,
       "watermarkAngle": -24,
       "watermarkSize": 42,
       "watermarkGap": 80,
-      "titlePrefix": true,
+      "tabDisplay": {
+        "enabled": true,
+        "favicon": { "enabled": false, "source": "preset", "type": "solid-rounded-square", "value": "#dc2626" },
+        "title": { "prefix": "[PROD] ", "override": "" }
+      },
       "markerMode": "badge-watermark",
       "rules": [{ "type": "wildcard", "value": "https://prod.example.com/*" }],
       "accounts": []
@@ -53,11 +57,15 @@
       "watermarkText": "Development Sample",
       "watermarkEnabled": false,
       "watermarkColor": "#2563eb",
-      "watermarkOpacity": 0.08,
+      "watermarkOpacity": 0.06,
       "watermarkAngle": -24,
       "watermarkSize": 42,
       "watermarkGap": 80,
-      "titlePrefix": true,
+      "tabDisplay": {
+        "enabled": true,
+        "favicon": { "enabled": false, "source": "preset", "type": "solid-rounded-square", "value": "#2563eb" },
+        "title": { "prefix": "[DEV] ", "override": "" }
+      },
       "markerMode": "badge",
       "rules": [{ "type": "wildcard", "value": "https://dev.example.com/*" }],
       "accounts": []
