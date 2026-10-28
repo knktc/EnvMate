@@ -1875,6 +1875,10 @@ button:hover {
   gap: 5px;
 }
 
+.color-field > label {
+  justify-self: start;
+}
+
 .color-field__body {
   display: grid;
   gap: 7px;
@@ -1895,6 +1899,10 @@ button:hover {
   border: 2px solid transparent;
   background: var(--swatch-color);
   box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.08);
+}
+
+.color-swatch:hover {
+  background: var(--swatch-color);
 }
 
 .color-swatch.is-active {

@@ -56,6 +56,7 @@ Many internal systems look nearly identical across dev, test, pre-release, and p
 
 ## Changelog
 
+- 2026-10-28 · v0.6.1: Fixed preset color swatches turning pale on hover and color pickers opening when clicking empty space beside the swatches.
 - 2026-09-13 · v0.6.0: Added tab configuration for customizing the browser tab favicon, title prefix, and title. Fixed some bugs.
 - 2026-09-10 · v0.5.5: Added a focus-aware breathing highlight that makes the active configuration section clear while editing.
 - 2026-09-09 · v0.5.4: Fixed environment title prefixes disappearing when pages update their titles or replace the title element.
